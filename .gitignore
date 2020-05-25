@@ -1,1 +1,4 @@
-build/
+# git doesn't allow to sync empty folders, so let's ignore everything inside
+# build/ except a dummy file called .gitkeep
+build/*
+!build/.gitkeep 
