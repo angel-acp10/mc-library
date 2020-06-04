@@ -21,23 +21,14 @@ typedef struct{
 /***********************
  * Function prototypes 
  **********************/
-void mcGeo_yLine(mcGeo_t * line, uint8_t * buf);
-void mcGeo_xLine(mcGeo_t * line, uint8_t * buf);
-void mcGeo_fRectangle(mcGeo_t * rect, uint8_t * buf);
-void mcGeo_rectangle(mcGeo_t * rect, uint8_t * buf);
+void mc_selectBuffer(uint8_t * buffer);
+void mcGeo_drawPixel(uint16_t x, uint16_t y, mcColor_t color);
+void mcGeo_yLine(mcGeo_t * line);
+void mcGeo_xLine(mcGeo_t * line);
+void mcGeo_fRectangle(mcGeo_t * rect);
+void mcGeo_rectangle(mcGeo_t * rect);
+void mcGeo_enableMask(uint16_t xMin, uint16_t xMax, uint16_t yMin, uint16_t yMax);
+void mcGeo_disableMask();
 
-/**********
- * Macros
- **********/
-#define _IDX_(x,y) ( (y*SCR_WIDTH/8) + (x/8) )
-#define _BIT_(x) (x-(x/8)*8)
-#define _BIT_MASK_(x) ( 0x80>>_BIT_(x) )
-
-#define _mcGeo_drawPixel_(x,y,color,buf){\
-    if( color )\
-        *(buf+_IDX_(x,y)) |= (_BIT_MASK_(x));\
-    else\
-        *(buf+_IDX_(x,y)) &= ~(_BIT_MASK_(x));\
-}
 
 #endif
