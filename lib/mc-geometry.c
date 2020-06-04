@@ -6,15 +6,18 @@ void mcGeo_xLine(mcGeo_t * line, uint8_t * buf)
 {
     uint32_t x = line->x;
     uint32_t w = line->w;
-    while(w)
-    {
-        if( line->color )
+    if( line->color ){
+        while(w){
             *(buf+_IDX_(x,line->y)) |= _BIT_MASK_(x);
-        else
+            x++;
+            w--;
+        }
+    }else{
+        while(w){
             *(buf+_IDX_(x,line->y)) &= ~_BIT_MASK_(x);
-
-        x++;
-        w--;
+            x++;
+            w--;
+        }
     }
 }
 
@@ -23,15 +26,19 @@ void mcGeo_yLine(mcGeo_t * line, uint8_t * buf)
     uint32_t idx = _IDX_(line->x, line->y);
     uint32_t bit_mask = _BIT_MASK_(line->x);
     uint32_t h = line->h;
-    while(h)
-    {
-        if( line->color ){
-            *(buf+idx) |= (bit_mask);
-        }else
-            *(buf+idx) &= ~(bit_mask); 
 
-        idx += SCR_WIDTH/8; 
-        h--;
+    if( line->color ){
+        while(h){
+            *(buf+idx) |= (bit_mask);
+            idx += SCR_WIDTH/8; 
+            h--;
+        }
+    }else{
+        while(h){
+            *(buf+idx) &= ~(bit_mask); 
+            idx += SCR_WIDTH/8; 
+            h--;
+        }
     }
 }
 
