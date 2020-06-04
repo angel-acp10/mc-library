@@ -1,6 +1,6 @@
 add_library(lib
-	mc-geometry.h
-	mc-geometry.c
+	mc-draw.h
+	mc-draw.c
 	mc-display.h
 	mc-display.c
 	)

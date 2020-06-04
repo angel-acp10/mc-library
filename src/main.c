@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <stdint.h>
 #include <SDL2/SDL.h>
-#include "mc-geometry.h"
+#include "mc-draw.h"
 #include "mc-display.h"
 
 SDL_Window *window;
@@ -20,9 +20,9 @@ int main(int argc, char **argv)
 
     //create and select the buffer
     uint8_t buf[SCR_WIDTH*SCR_HEIGHT/8]={0};
-    mc_selectBuffer(buf);
+    mcDraw_selectBuffer(buf);
 
-    mcGeo_enableMask(0,128,0, 64);
+    mcDraw_enableMask(0,128,0, 64);
 
     //display
     mc_display_t disp;
@@ -38,7 +38,7 @@ int main(int argc, char **argv)
     fRec.w = 50;
     fRec.h = 20;
     fRec.color = white;
-    mcGeo_fRectangle(&fRec);
+    mcDraw_fRectangle(&fRec);
 
     //rectangle
     mcGeo_t rec;
@@ -47,7 +47,7 @@ int main(int argc, char **argv)
     rec.w = 10;
     rec.h = 40;
     rec.color = white;
-    mcGeo_rectangle(&rec);
+    mcDraw_rectangle(&rec);
 
     //hLine
     mcGeo_t hLine;
@@ -55,7 +55,7 @@ int main(int argc, char **argv)
     hLine.y = 40;
     hLine.w = 60;
     hLine.color = white;
-    mcGeo_xLine(&hLine);
+    mcDraw_xLine(&hLine);
 
     //vLine
     mcGeo_t vLine;
@@ -63,12 +63,12 @@ int main(int argc, char **argv)
     vLine.y = 5;
     vLine.h = 25;
     vLine.color = white;
-    mcGeo_yLine(&vLine);
+    mcDraw_yLine(&vLine);
 
     //draw a single pixel
-    mcGeo_drawPixel(100, 60, white);
+    mcDraw_pixel(100, 60, white);
 
-    mcGeo_disableMask();
+    mcDraw_disableMask();
 
     //print buffer to screen
     disp.displayBuffer_cb(buf);
