@@ -1,20 +1,31 @@
+/***********
+ * Includes 
+ ***********/ 
 #include "mc-draw.h"
 
+/*******************
+ * Private typedefs
+ *******************/ 
 typedef struct{
     uint16_t xMin, xMax, yMin, yMax; // all limits are included
     _Bool on;
 }mask_t;
-static mask_t mask = {0,0,0,0,0};
 
+/********************
+ * Private variables
+ ********************/ 
+static mask_t mask = {0,0,0,0,0};
 static uint8_t * currBuffer;
 
 /**********
  * Macros
  **********/
+/* Macros related to the buffer acces */
 #define _IDX_(x,y) ( (y*SCR_WIDTH/8) + (x/8) )
 #define _BIT_(x) (x-(x/8)*8)
 #define _BIT_MASK_(x) ( 0x80>>_BIT_(x) )
 
+/* Draws a single pixel */
 #define _mcDraw_pixel_(x,y,color){\
     if(!mask.on || (x>=mask.xMin && x<=mask.xMax && y>=mask.yMin && y<=mask.yMax) ){\
         if( color )\
@@ -24,16 +35,28 @@ static uint8_t * currBuffer;
     }\
 }
 
+/********************
+ * Public functions
+ ********************/ 
+/*
+ * @brief: select a buffer to draw
+ */ 
 void mcDraw_selectBuffer(uint8_t * buffer)
 {
     currBuffer = buffer;
 }
 
+/*
+ * @brief: draw a single pixel
+ */ 
 void mcDraw_pixel(uint16_t x, uint16_t y, mcColor_t color)
 {
     _mcDraw_pixel_(x,y,color);
 }
 
+/*
+ * @brief: draw an horizontal line
+ */ 
 void mcDraw_xLine(mcGeo_t * line)
 {
     uint32_t x = line->x;
@@ -60,6 +83,9 @@ void mcDraw_xLine(mcGeo_t * line)
     }
 }
 
+/*
+ * @brief: draw a vertical line
+ */ 
 void mcDraw_yLine(mcGeo_t * line)
 {
     uint32_t y = line->y;
@@ -90,6 +116,9 @@ void mcDraw_yLine(mcGeo_t * line)
     }
 }
 
+/*
+ * @brief: draw a filled rectangle
+ */ 
 void mcDraw_fRectangle(mcGeo_t * rect)
 {
     mcGeo_t line = *rect;
@@ -104,6 +133,9 @@ void mcDraw_fRectangle(mcGeo_t * rect)
     }
 }
 
+/*
+ * @brief: draw an empty rectangle
+ */ 
 void mcDraw_rectangle(mcGeo_t * rect)
 {
     mcGeo_t line = {rect->x, rect->y, rect->w, rect->h, rect->color};
@@ -116,6 +148,9 @@ void mcDraw_rectangle(mcGeo_t * rect)
     mcDraw_yLine(&line);
 }
 
+/*
+ * @brief: when enabled, only pixels within it will be drawn
+ */ 
 void mcDraw_enableMask(uint16_t xMin, uint16_t xMax, uint16_t yMin, uint16_t yMax)
 {
     mask.xMin = xMin;
@@ -125,6 +160,10 @@ void mcDraw_enableMask(uint16_t xMin, uint16_t xMax, uint16_t yMin, uint16_t yMa
     mask.on = 1;
 }
 
+/*
+ * @brief: disbale mask. Pixels are drawn faster when it is disbaled, 
+ * but is dangerous to write outside the buffer dimmensions
+ */ 
 void mcDraw_disableMask()
 {
     mask.on = 0;
