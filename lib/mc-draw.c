@@ -1,3 +1,7 @@
+/*
+ *  This file contains all these functions which directly write to buffer
+ */ 
+
 /***********
  * Includes 
  ***********/ 
@@ -27,11 +31,11 @@ static uint8_t * currBuffer;
 
 /* Draws a single pixel */
 #define _mcDraw_pixel_(x,y,color){\
-    if(!mask.on || (x>=mask.xMin && x<=mask.xMax && y>=mask.yMin && y<=mask.yMax) ){\
+    if(!mask.on || ((x)>=mask.xMin && (x)<=mask.xMax && (y)>=mask.yMin && (y)<=mask.yMax) ){\
         if( color )\
-            *(currBuffer+_IDX_(x,y)) |= (_BIT_MASK_(x));\
+            *(currBuffer+_IDX_((x),(y))) |= (_BIT_MASK_((x)));\
         else\
-            *(currBuffer+_IDX_(x,y)) &= ~(_BIT_MASK_(x));\
+            *(currBuffer+_IDX_((x),(y))) &= ~(_BIT_MASK_((x)));\
     }\
 }
 
@@ -167,4 +171,48 @@ void mcDraw_enableMask(uint16_t xMin, uint16_t xMax, uint16_t yMin, uint16_t yMa
 void mcDraw_disableMask()
 {
     mask.on = 0;
+}
+
+/*
+ * @biref: Given a "ch_idx" draws the corresponding character with the offset
+ * x_ofs and y_ofs and font f. This function is here due to optimization purposes, 
+ * but should in "mc-text.c" module.
+ */ 
+void mcDraw_char(uint32_t ch_idx, uint16_t x_ofs, uint16_t y_ofs, mcFont_t * f)
+{
+    uint32_t bm_idx;
+    printf("ch_idx = %u\n", ch_idx);
+
+    // using ch_idx, get bitmap index
+    bm_idx = f->ch_info[ch_idx].bitmap_idx;
+    printf("bm_idx = %u\n", bm_idx);
+
+    // draw the glyph
+    uint32_t px = f->ch_info[ch_idx].w * f->ch_info[ch_idx].h;
+    uint16_t x = 0, y = 0;
+    uint8_t bit = 0;
+    while(px)
+    {
+        // set/reset pixel
+        if(f->bm[bm_idx] & 0x80>>bit){   
+            _mcDraw_pixel_(x+x_ofs, y+y_ofs, white);
+        }else{        
+            _mcDraw_pixel_(x+x_ofs, y+y_ofs, black);
+        }
+        
+        x++;
+        if(x >= f->ch_info[ch_idx].w){ // end line check
+            x = 0;
+            bit = 0;
+            bm_idx++;
+            y++;
+        }else{ // end byte check
+            bit++;
+            if(bit >= 8){
+                bit = 0;
+                bm_idx++;
+            }
+        }
+        px--;
+    }
 }

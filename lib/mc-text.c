@@ -34,7 +34,7 @@ void drawString(char * str, uint16_t x_ofs, uint16_t y_ofs, mcFont_t * f)
 
         //set the appropiate vertical offset and draw the char
         y_char = y_ofs + f->ch_info[ch_idx].y_offset;
-        drawChar(ch_idx, x_char, y_char, f);
+        mcDraw_char(ch_idx, x_char, y_char, f);
 
         // move cursor
         x_char += f->ch_info[ch_idx].w + f->fix_kern;
@@ -42,47 +42,7 @@ void drawString(char * str, uint16_t x_ofs, uint16_t y_ofs, mcFont_t * f)
     }
 }
 
-/*
- * @biref: Given a "ch_idx" draws the corresponding character with the offset
- * x_ofs and y_ofs and font f
- */ 
-void drawChar(uint32_t ch_idx, uint16_t x_ofs, uint16_t y_ofs, mcFont_t * f)
-{
-    uint32_t bm_idx;
-    printf("ch_idx = %u\n", ch_idx);
 
-    // using ch_idx, get bitmap index
-    bm_idx = f->ch_info[ch_idx].bitmap_idx;
-    printf("bm_idx = %u\n", bm_idx);
-
-    // draw the glyph
-    uint32_t px = f->ch_info[ch_idx].w * f->ch_info[ch_idx].h;
-    uint16_t x = 0, y = 0;
-    uint8_t bit = 0;
-    while(px)
-    {
-        // set/reset pixel
-        if(f->bm[bm_idx] & 0x80>>bit)   
-            mcDraw_pixel(x+x_ofs, y+y_ofs, white);
-        else                            
-            mcDraw_pixel(x+x_ofs, y+y_ofs, black);
-        
-        x++;
-        if(x >= f->ch_info[ch_idx].w){ // end line check
-            x = 0;
-            bit = 0;
-            bm_idx++;
-            y++;
-        }else{ // end byte check
-            bit++;
-            if(bit >= 8){
-                bit = 0;
-                bm_idx++;
-            }
-        }
-        px--;
-    }
-}
 
 /*
  * @brief: Given a character encoded in UTF-8, returns its unicode code point.
