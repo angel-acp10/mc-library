@@ -5,6 +5,10 @@ add_library(lib
 	mc-display.c
 	mc-text.h
 	mc-text.c
+	mc-obj.h
+	mc-obj.c
+	linked_list.h
+	linked_list.c
 	)
 
 target_link_libraries(lib fonts)
