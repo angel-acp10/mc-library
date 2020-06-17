@@ -12,3 +12,8 @@ target_include_directories(tests PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 add_executable(test-ll
 	test-ll.c)
 target_link_libraries(test-ll lib)
+
+# test object
+add_executable(test-obj
+	test-obj.c)
+target_link_libraries(test-obj lib)

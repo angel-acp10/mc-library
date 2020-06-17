@@ -36,7 +36,8 @@ enum {
 typedef uint8_t mcAlign_t;
 
 typedef struct{
-    struct mcObj * alignObj;
+    struct mcObj * align_ref_obj;
+    mcAlign_t align_type;
     int16_t x, y;
     int16_t w, h;
 }mcGeo_t;
@@ -50,7 +51,6 @@ typedef struct mcObj{
     list_t child_list;
 
     mcGeo_t geom;
-    mcAlign_t align;
 
     mcDraw_cb_t drawToBuffer_cb;
     mcDelete_cb_t delete_cb;
@@ -59,12 +59,22 @@ typedef struct mcObj{
     void * data; // points to an object specific structure
 }mcObj_t;
 
+/**********************
+ * Function prototypes
+ **********************/
  /* @brief: creates an object, but the data struct
   * is not malloc'd.
   * @parent: pointer to its parent obj
   * @scr: pointer to the desired screen
   * @return: a pointer to the created obj */
 mcObj_t* mcObj_create(mcObj_t *parent, mcObj_t *scr);
+
+/*
+ * @brief: Not only deletes an object from the proper screen child_list, but
+ * also removes all the objects found in the object child_list.
+ * @obj: pointer to the object to be deleted
+ */
+void mcObj_delete(mcObj_t * obj);
 
 /* @brief: aligns one object respect to another one
  * @obj: object to be aligned
@@ -74,8 +84,6 @@ mcObj_t* mcObj_create(mcObj_t *parent, mcObj_t *scr);
  * x axis using this variable
  * @y_offset: given a predefined alignment, "obj" can be moved along
  * y axis using this variable */
-void mcObj_align(mcObj_t * obj, mcObj_t * align_obj, mcAlign_t align, int16_t x_offset, int16_t y_offset);
-
-
+void mcObj_align(mcObj_t * obj, mcObj_t * align_obj, mcAlign_t alignment_type, int16_t x_offset, int16_t y_offset);
 
 #endif
