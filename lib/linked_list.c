@@ -1,18 +1,17 @@
+/***********
+ * Includes 
+ ***********/ 
 #include "linked_list.h"
-
-#include <stdio.h>
 #include <stdlib.h>
 
-
 /******************************/
-/* static function prototypes */
+/* static function prototypes 
 /******************************/
-
 static node_t* ll_createNode(void * data);
 static void ll_deleteNode(node_t * node);
 
 /******************************/
-/* public funtion definitions */
+/* public funtion definitions 
 /******************************/
 /* @brief: creates a list
  * @return: a new list */
@@ -27,7 +26,7 @@ list_t ll_create()
 
 /* @brief: deletes all the nodes of a list
  * @list: list to be cleared */
-void ll_clear_list(list_t * list)
+void ll_clearList(list_t * list)
 {
     while(list->size){
         ll_deleteFront(list);
@@ -43,7 +42,7 @@ uint16_t ll_size(list_t * list)
 
 /* @brief: returns "true" if the list is empty
  */
-uint8_t ll_empty(list_t * list)
+_Bool ll_empty(list_t * list)
 {
 	return list->head == NULL;
 }
@@ -52,7 +51,7 @@ uint8_t ll_empty(list_t * list)
  * @list: pointer to the list where the node will be inserted
  * @data: pointer to the data that will be inserted
  */
-uint8_t ll_addFront(list_t * list, void * data)
+_Bool ll_addFront(list_t * list, void * data)
 {
 	node_t * new = ll_createNode(data);
 	if(new != NULL)
@@ -80,7 +79,7 @@ uint8_t ll_addFront(list_t * list, void * data)
  * @list: pointer to the list where the node will be inserted
  * @data: pointer to the data that will be inserted
  */
-uint8_t ll_addBack(list_t * list, void * data)
+_Bool ll_addBack(list_t * list, void * data)
 {
 	node_t * new = ll_createNode(data);
 	if(new != NULL)
@@ -109,7 +108,7 @@ uint8_t ll_addBack(list_t * list, void * data)
  * @list: pointer to the list where the node will be inserted
  * @data: pointer to the data that will be inserted
  */
-uint8_t ll_addAfter(list_t * list, void * data, uint16_t n)
+_Bool ll_addAfter(list_t * list, void * data, uint16_t n)
 {
 	if( n > list->size-1 ) // the index is bigger than the list
 		return 0;
@@ -126,7 +125,7 @@ uint8_t ll_addAfter(list_t * list, void * data, uint16_t n)
 	{
 		node_t* new = ll_createNode(data);
 		node_t * pointer;
-		uint8_t pos;
+		uint16_t pos;
 
 		if( n < list->size/2 )
 		{
@@ -231,7 +230,7 @@ void ll_deleteItem(list_t * list, uint16_t n)
     else if(n < list->size)
     {
         node_t * pointer;
-        uint8_t pos;
+        uint16_t pos;
 
         if( n < list->size/2 ) // start the search from head
         {
@@ -289,7 +288,7 @@ void* ll_getBack(list_t* list)
  * @n: position
  * @list: pointer to the list where the node will be inserted
  */
-void* ll_getItem(uint16_t n, list_t* list)
+void* ll_getItem(list_t* list, uint16_t n)
 {
     if(n == 0)
         return ll_getFront(list);
@@ -324,9 +323,32 @@ void* ll_getItem(uint16_t n, list_t* list)
     return NULL;
 }
 
+/*
+ * @brief: searchs if any node of the list contains "key_data"
+ * in "data" field.
+ * @list: pointer to the list where the search will be performed
+ * @key_data: data to search in the list
+ * @returns the list index where the node is
+ */ 
+int16_t ll_searchData(list_t* list, void * key_data)
+{
+	if(list->head != NULL)//check if list is not empty
+	{
+		node_t * pointer = list->head;
+		int16_t pos = 0;
+
+		do{
+			if(pointer->data == key_data)
+				return pos;
+			pos++;
+			pointer = pointer->next;
+		}while(pointer != NULL);
+	} 
+	return -1; // data wasn't found
+}
 
 /*******************************/
-/* static function definitions */
+/* static function definitions 
 /*******************************/
 /* @brief: creates a new node
  * @data: pointer to the data to be stored

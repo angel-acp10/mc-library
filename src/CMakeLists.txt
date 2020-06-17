@@ -9,3 +9,4 @@ target_link_libraries(mc-gui lib)
 target_link_libraries(mc-gui fonts)
 target_link_libraries(mc-gui tests)
 target_link_libraries(mc-gui ${SDL2_LIBRARIES})
+
