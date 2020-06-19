@@ -42,7 +42,7 @@ int main()
      */
 
     printf("\nSTART o11 deletion\n");
-    mcObj_delete(o12);
+    mcObj_delete(o11);
     printf("END o11 deletion\n");
 
     printf("\nRESULT:\n\n");
