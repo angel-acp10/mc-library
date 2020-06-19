@@ -330,7 +330,7 @@ void* ll_getItem(list_t* list, uint16_t n)
  * @key_data: data to search in the list
  * @returns the list index where the node is
  */ 
-int16_t ll_searchData(list_t* list, void * key_data)
+int16_t ll_searchData_getIdx(list_t* list, void * key_data)
 {
 	if(list->head != NULL)//check if list is not empty
 	{
@@ -345,6 +345,42 @@ int16_t ll_searchData(list_t* list, void * key_data)
 		}while(pointer != NULL);
 	} 
 	return -1; // data wasn't found
+}
+
+/*
+ * @brief: searchs if any node of the list contains "key_data"
+ * in "data" field and removes it
+ * @list: pointer to the list where the search will be performed
+ * @key_data: data to search in the list
+ * @returns the list index where the node is
+ */ 
+_Bool ll_searchData_deleteItem(list_t* list, void * key_data)
+{
+	if(list->head != NULL)//check if list is not empty
+	{
+		node_t * pointer = list->head;
+
+		do{
+			if(pointer->data == key_data){
+				if(pointer == list->head) //if head is removed, update head
+					list->head = pointer->next;
+				else
+					pointer->prev->next = pointer->next;
+				
+				if(pointer == list->tail) //if tail is removed, update tail
+					list->tail = pointer->prev;
+				else
+					pointer->next->prev = pointer->prev;
+
+				ll_deleteNode(pointer);
+
+				list->size--;
+				return 1;
+			}
+			pointer = pointer->next;
+		}while(pointer != NULL);
+	} 
+	return 0; // data wasn't found		
 }
 
 /*******************************/

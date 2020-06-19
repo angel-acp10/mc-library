@@ -42,7 +42,7 @@ int main()
      */
 
     printf("\nSTART o11 deletion\n");
-    mcObj_delete(o11);
+    mcObj_delete(o12);
     printf("END o11 deletion\n");
 
     printf("\nRESULT:\n\n");
@@ -73,7 +73,6 @@ int main()
     printf("\nSTART o1 deletion\n");
     mcObj_delete(o1);
     printf("END o1 deletion\n");
-    //es como si o13 no existiese, borra o12 y luego se va a o11
 
     printf("\nRESULT:\n\n");
     printf("\tscr \t= %p \tchild_list.size = %d\n", screen, screen->child_list.size);

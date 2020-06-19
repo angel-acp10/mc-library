@@ -104,58 +104,81 @@ int main()
     printf("8.4. Use ll_getItem to get data at index = %d\n", idx);
     printf("\tdata = %d,\n", *((int*)ll_getItem(&l,idx)));
 
-    //check ll_searchData
+    //check ll_searchData_getIdx
     printf("\n9.1. Use ll_searchData to get the index where data matches. Search = &aux1\n");
-    printf("\ti = %d\n", ll_searchData(&l, &aux1));
+    printf("\ti = %d\n", ll_searchData_getIdx(&l, &aux1));
     
     printf("9.2. Use ll_searchData to get the index where data matches. Search = a+1\n");
     printf("(which points to data = 1)\n");
     printf("(note: there are to data=1 in list, but it only return the first one)\n");
-    printf("\ti = %d\n", ll_searchData(&l, a+1));
+    printf("\ti = %d\n", ll_searchData_getIdx(&l, a+1));
     
     printf("9.3. Use ll_searchData to get the index where data matches. Search = &aux4\n");
-    printf("\ti = %d\n", ll_searchData(&l, &aux4));
+    printf("\ti = %d\n", ll_searchData_getIdx(&l, &aux4));
     
     printf("9.4. Use ll_searchData to get the index where data matches. Search = a+9\n");
     printf("(which points to data = 9)\n");
-    printf("\ti = %d\n", ll_searchData(&l, a+9));
+    printf("\ti = %d\n", ll_searchData_getIdx(&l, a+9));
+
+    //check ll_searchData_deleteItem
+    printf("\n10.1. Use ll_searchData_deleteItem to search and remove first element whose\n");
+    printf("data matches. Search = &aux1\n");
+    ll_searchData_deleteItem(&l, &aux1);
+    print_list(&l);
+    
+    printf("10.2. Use ll_searchData_deleteItem to search and remove first element whose\n");
+    printf("data matches. Search = a+1\n (which points to data = 1)\n");
+    printf("(note: there are two data=1 in list, but it only removes the first one)\n");
+    ll_searchData_deleteItem(&l, a+1);
+    print_list(&l);
+    
+    printf("10.3. Use ll_searchData_deleteItem to search and remove first element whose\n");
+    printf("data matches.  Search = &aux4\n");
+    ll_searchData_deleteItem(&l, &aux4);
+    print_list(&l);
+    
+    printf("10.4. Use ll_searchData_deleteItem to search and remove first element whose\n");
+    printf("data matches.  Search = a+9 (which points to data = 9)\n");
+    ll_searchData_deleteItem(&l, a+9);
+    print_list(&l);
+
 
     //checks if list is empty
-    printf("\n10. Check if list is empty with ll_empty.\n");
+    printf("\n11. Check if list is empty with ll_empty.\n");
     ll_empty(&l)? printf("\tTRUE\n") : printf("\tFALSE\n"); 
 
     //checks ll_deleteBack
-    printf("\n11. Delete whole list using ll_deleteBack.\n");
+    printf("\n12. Delete whole list using ll_deleteBack.\n");
     int s = ll_size(&l);
     for(int i=0; i<s; i++)
         ll_deleteBack(&l);
     print_list(&l);
 
     //checks if list is empty
-    printf("\n12. Check if list is empty with ll_empty.\n");
+    printf("\n13. Check if list is empty with ll_empty.\n");
     ll_empty(&l)? printf("\tTRUE\n") : printf("\tFALSE\n"); 
 
     //refill list with array A
-    printf("\n13. Refill list using ll_addBack to add all elements from array 'a'\n");
+    printf("\n14. Refill list using ll_addBack to add all elements from array 'a'\n");
     for(int i=0; i<SIZE_A; i++)
         ll_addBack(&l, a+i); 
     print_list(&l);
 
     //checks ll_deleteFront
-    printf("\n14. Delete whole list using ll_deleteFront.\n");
+    printf("\n15. Delete whole list using ll_deleteFront.\n");
     s = ll_size(&l);
     for(int i=0; i<s; i++)
         ll_deleteFront(&l);
     print_list(&l);
 
     //refill list with array A
-    printf("\n15. Refill list using ll_addBack to add all elements from array 'a'\n");
+    printf("\n16. Refill list using ll_addBack to add all elements from array 'a'\n");
     for(int i=0; i<SIZE_A; i++)
         ll_addBack(&l, a+i); 
     print_list(&l);
 
     //checks ll_clearList
-    printf("\n16. Delete whole list using ll_clearList.\n");
+    printf("\n17. Delete whole list using ll_clearList.\n");
     ll_clearList(&l);
     print_list(&l);
 

@@ -64,53 +64,43 @@ void mcObj_delete(mcObj_t * obj)
         #ifdef _TEST_OBJ_
         printf("o = %p Has children, removing its children first.\n", obj);
         #endif
-        //mcObj_delete((mcObj_t *)obj->child_list.tail->data);
         mcObj_delete((mcObj_t *)obj->child_list.head->data);
     }
 
-    //if(obj->child_list.tail == NULL)
-    //{ // check if is a terminal object
-        if(obj->parent == NULL && obj->scr==NULL){ 
-            #ifdef _TEST_OBJ_
-            printf("o = %p is now removed\t[case: obj->parent == NULL && obj->scr == NULL]\n", obj);
-            #endif
-            //this is a screen object, which is not allowed to be removed
-        }
-        else if(obj->parent == obj->scr){
-            #ifdef _TEST_OBJ_
-            printf("o = %p is now removed\t[case: obj->parent == obj->scr]\n", obj);
-            #endif
-            //this is a normal object, but its screen is also its parent,
-            //so the object will only be removed from scr child_list
-            int16_t scr_idx = ll_searchData(&obj->scr->child_list, obj);
-            if(scr_idx != -1)
-                ll_deleteItem(&obj->scr->child_list, scr_idx);
-            
-            free(obj);
-            obj = NULL;
-        }
-        else{
-            #ifdef _TEST_OBJ_
-            printf("o = %p is now removed\t[case: obj->parent != obj->scr]\n", obj);
-            #endif 
-            //this is a normal object, whose screen and parent objects are
-            //different. The object must be deleted from scr and parent 
-            //child_lists
-
-            //remove the object from the screen list
-            int16_t scr_idx = ll_searchData(&obj->scr->child_list, obj);
-            if(scr_idx != -1)
-                ll_deleteItem(&obj->scr->child_list, scr_idx);
-
-            //remove it from the parent screen child_list
-            //ll_deleteBack(&obj->parent->child_list);
-            ll_deleteFront(&obj->parent->child_list);
-
-            free(obj);
-            obj = NULL;
-        }
+    if(obj->parent == NULL && obj->scr==NULL){ 
+        #ifdef _TEST_OBJ_
+        printf("o = %p is now removed\t[case: obj->parent == NULL && obj->scr == NULL]\n", obj);
+        #endif
+        //this is a screen object, which is not allowed to be removed
+    }
+    else if(obj->parent == obj->scr){
+        #ifdef _TEST_OBJ_
+        printf("o = %p is now removed\t[case: obj->parent == obj->scr]\n", obj);
+        #endif
+        //this is a normal object, but its screen is also its parent,
+        //so the object will only be removed from scr child_list
+        ll_searchData_deleteItem(&obj->scr->child_list, obj);
         
-    //}
+        free(obj);
+        obj = NULL;
+    }
+    else{
+        #ifdef _TEST_OBJ_
+        printf("o = %p is now removed\t[case: obj->parent != obj->scr]\n", obj);
+        #endif 
+        //this is a normal object, whose screen and parent objects are
+        //different. The object must be deleted from scr and parent 
+        //child_lists
+
+        //remove the object from the screen list
+        ll_searchData_deleteItem(&obj->scr->child_list, obj);
+
+        //remove it from the parent screen child_list
+        ll_searchData_deleteItem(&obj->parent->child_list, obj);
+
+        free(obj);
+        obj = NULL;
+    }
 }
 
 

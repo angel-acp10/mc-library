@@ -98,6 +98,15 @@ void* ll_getItem(list_t* list, uint16_t n);
  * @key_data: data to search in the list
  * @returns the list index where the node is
  */ 
-int16_t ll_searchData(list_t* list, void * key_data);
+int16_t ll_searchData_getIdx(list_t* list, void * key_data);
+
+/*
+ * @brief: searchs if any node of the list contains "key_data"
+ * in "data" field and removes it
+ * @list: pointer to the list where the search will be performed
+ * @key_data: data to search in the list
+ * @returns the list index where the node is
+ */ 
+_Bool ll_searchData_deleteItem(list_t* list, void * key_data);
 
 #endif
