@@ -1,12 +1,11 @@
-add_library(tests
-	test-draw.h
-	test-draw.c
-	test-text.h
-	test-text.c
-	)
+find_package(SDL2 REQUIRED)
+include_directories(${SDL2_INCLUDE_DIRS})
 
-target_link_libraries(tests lib)
-target_include_directories(tests PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
+# test draw
+add_executable(test-draw
+	test-draw.c) 
+target_link_libraries(test-draw ${SDL2_LIBRARIES})
+target_link_libraries(test-draw lib)
 
 # test linked list
 add_executable(test-ll

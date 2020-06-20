@@ -1,6 +1,5 @@
 #include "mc-obj.h"
 
-#include <stdlib.h>
 #include <stdio.h>
 
 #define _TEST_OBJ_ 1

@@ -5,11 +5,18 @@
  * Includes
  ************/
 #include <stdint.h>
+#include <stdlib.h>
 #include "linked_list.h"
 
 /************
  * Typedefs
  ************/
+enum{
+    black = 0,
+    white = 1
+};
+typedef uint8_t mcColor_t;
+
 enum {
     MC_ALIGN_CENTER = 0,
     MC_ALIGN_IN_TOP_LEFT,
@@ -40,6 +47,7 @@ typedef struct{
     mcAlign_t align_type;
     int16_t x, y;
     int16_t w, h;
+    mcColor_t color;
 }mcGeo_t;
 
 typedef void(*mcDraw_cb_t)(struct mcObj* obj);
@@ -56,7 +64,7 @@ typedef struct mcObj{
     mcDelete_cb_t delete_cb;
     _Bool refreshBuffer;
 
-    void * data; // points to an object specific structure
+    void * obj_data; // points to an object specific structure
 }mcObj_t;
 
 /**********************

@@ -1,8 +1,34 @@
-#include "test-draw.h"
+#include <SDL2/SDL.h>
 #include "mc-draw.h"
+#include "mc-obj.h"
 
-void test_draw()
+#define SCR_WIDTH 1280
+#define SCR_HEIGHT 640
+
+SDL_Window *window;
+SDL_Renderer *renderer;
+
+void display_buffer(uint8_t *buffer);
+
+int main()
 {
+    _Bool quit = 0;
+    SDL_Event event;
+    SDL_Init(SDL_INIT_VIDEO);
+    SDL_CreateWindowAndRenderer(SCR_WIDTH, SCR_HEIGHT, 0 , &window, &renderer);
+    SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
+    SDL_RenderPresent(renderer);
+    ///////////////////////////////////////////////////////////////////////////
+
+    //create and select the buffer
+    uint8_t buf[SCR_WIDTH*SCR_HEIGHT/8]={0};
+
+    mcObj_t * scr = mcScr_create();
+    mcScr_setResolution(scr, SCR_WIDTH, SCR_HEIGHT);
+    mcScr_setBuffer(scr, buf);
+    mcScr_setDisplayCb(scr, display_buffer);
+    mcScr_select(scr);
+
     //filled rectangle
     mcGeo_t fRec;
     fRec.x = 1200;//10-60
@@ -40,4 +66,49 @@ void test_draw()
     //draw a single pixel
     mcDraw_pixel(100, 60, white);
 
+
+    //print buffer to screen
+    ((mcObjData_scr_t*)scr->obj_data)->send_buf_cb(buf);
+
+    ///////////////////////////////////////////////////////////////////////////
+    while(!quit)
+    {
+        if(event.type == SDL_QUIT)
+            quit = 1;
+
+        SDL_WaitEvent(&event);
+    }
+    SDL_DestroyWindow(window);
+    SDL_Quit();
+
+    return 0;
 }
+
+void display_buffer(uint8_t *buffer)
+{
+    uint32_t pixels = SCR_WIDTH*SCR_HEIGHT;
+    uint32_t x = 0, y = 0, idx = 0;
+    uint8_t bit = 0;
+
+    while(pixels){
+        if( buffer[idx] & 0x80>>bit  )
+            SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
+        else
+            SDL_SetRenderDrawColor(renderer, 0, 0, 0, 0);
+        SDL_RenderDrawPoint(renderer, x,y);
+
+        x++;
+        if(x >= SCR_WIDTH){
+            x = 0;
+            y++;
+        }
+        bit++;
+        if(bit >= 8){
+            bit = 0;
+            idx++;
+        }
+        pixels--;
+    }
+    SDL_RenderPresent(renderer);
+}
+

@@ -1,11 +1,13 @@
 /*
- *  This file contains all these functions which directly write to buffer
+ *  This file contains the screen object management, and all low level functions 
+ *  which directly write to buffer
  */ 
 
 /***********
  * Includes 
  ***********/ 
 #include "mc-draw.h"
+#include <stdio.h>
 
 /*******************
  * Private typedefs
@@ -15,27 +17,33 @@ typedef struct{
     _Bool on;
 }mask_t;
 
+typedef struct{
+    mask_t mask;
+    uint8_t * buf;
+    uint16_t w;
+    uint16_t h;
+}currScr_t;
+
 /********************
  * Private variables
  ********************/ 
-static mask_t mask = {0,0,0,0,0};
-static uint8_t * currBuffer;
+static currScr_t c_scr;
 
 /**********
  * Macros
  **********/
 /* Macros related to the buffer acces */
-#define _IDX_(x,y) ( (y*SCR_WIDTH/8) + (x/8) )
+#define _IDX_(x,y) ( (y*c_scr.w/8) + (x/8) )
 #define _BIT_(x) (x-(x/8)*8)
 #define _BIT_MASK_(x) ( 0x80>>_BIT_(x) )
 
 /* Draws a single pixel */
 #define _mcDraw_pixel_(x,y,color){\
-    if(!mask.on || ((x)>=mask.xMin && (x)<=mask.xMax && (y)>=mask.yMin && (y)<=mask.yMax) ){\
+    if( (x)>=c_scr.mask.xMin && (x)<=c_scr.mask.xMax && (y)>=c_scr.mask.yMin && (y)<=c_scr.mask.yMax ){\
         if( color )\
-            *(currBuffer+_IDX_((x),(y))) |= (_BIT_MASK_((x)));\
+            *(c_scr.buf+_IDX_((x),(y))) |= (_BIT_MASK_((x)));\
         else\
-            *(currBuffer+_IDX_((x),(y))) &= ~(_BIT_MASK_((x)));\
+            *(c_scr.buf+_IDX_((x),(y))) &= ~(_BIT_MASK_((x)));\
     }\
 }
 
@@ -43,11 +51,85 @@ static uint8_t * currBuffer;
  * Public functions
  ********************/ 
 /*
- * @brief: select a buffer to draw
+ * @brief: creates a screen object
  */ 
-void mcDraw_selectBuffer(uint8_t * buffer)
+mcObj_t * mcScr_create()
 {
-    currBuffer = buffer;
+    mcObj_t * scr = mcObj_create(NULL, NULL);
+
+    /* allocate memory for "data" */
+    mcObjData_scr_t * scr_data;
+    scr_data = (mcObjData_scr_t*)malloc( sizeof(mcObjData_scr_t) );
+    if(scr == NULL)
+        return NULL;
+    
+    scr_data->buffer = NULL;
+    scr_data->send_buf_cb = NULL;
+    scr->obj_data = scr_data;
+
+    return scr;
+}
+
+/*
+ * @brief: set a callback so the buffer is sent to the hardware
+ */ 
+void mcScr_setDisplayCb(mcObj_t * scr, mcCb_sendBuf_t send_buffer_cb)
+{
+   ((mcObjData_scr_t*)scr->obj_data)->send_buf_cb = send_buffer_cb;
+}
+
+/*
+ * @brief: set resolution into a screen object
+ */ 
+void mcScr_setResolution(mcObj_t * scr, uint16_t width, uint16_t height)
+{
+    scr->geom.w = width;
+    scr->geom.h = height;
+}
+
+/*
+ * @brief: set a buffer into a screen object
+ */  
+void mcScr_setBuffer(mcObj_t * scr, uint8_t * buffer)
+{
+    ((mcObjData_scr_t*)scr->obj_data)->buffer = buffer;
+}
+
+/*
+ * @brief: select a screen to draw in
+ */ 
+void mcScr_select(mcObj_t * scr)
+{
+    c_scr.w = scr->geom.w;
+    c_scr.h = scr->geom.h;
+
+    mcDraw_disableMask();
+    c_scr.buf = ((mcObjData_scr_t*)scr->obj_data)->buffer;
+}
+
+/*
+ * @brief: when enabled, only pixels within it will be drawn
+ * It must always be called after mcScr_select, because mcScr_select
+ * will disable the mask
+ */ 
+void mcDraw_enableMask(uint16_t xMin, uint16_t xMax, uint16_t yMin, uint16_t yMax)
+{
+    c_scr.mask.xMin = xMin;
+    c_scr.mask.xMax = xMax;
+    c_scr.mask.yMin = yMin;
+    c_scr.mask.yMax = yMax;
+}
+
+/*
+ * @brief: disbale mask. Pixels are drawn faster when it is disbaled, 
+ * but is dangerous to write outside the buffer dimmensions
+ */ 
+void mcDraw_disableMask()
+{
+    c_scr.mask.xMin = 0;
+    c_scr.mask.xMax = c_scr.w-1;
+    c_scr.mask.yMin = 0;
+    c_scr.mask.yMax = c_scr.h-1;
 }
 
 /*
@@ -66,21 +148,20 @@ void mcDraw_xLine(mcGeo_t * line)
     uint32_t x = line->x;
     uint32_t w = line->w;
 
-    if(mask.on){
-        if(line->x < mask.xMin)     
-            x = mask.xMin;
-        if(line->x+line->w > mask.xMax) 
-            w = mask.xMax - x;
-    }
-    if( !mask.on || (line->y>=mask.yMin && line->y<=mask.yMax) ){
+    if(line->x < c_scr.mask.xMin)     
+        x = c_scr.mask.xMin;
+    if(line->x+line->w > c_scr.mask.xMax) 
+        w = c_scr.mask.xMax - x;
+    
+    if( line->y>=c_scr.mask.yMin && line->y<=c_scr.mask.yMax ){
         if( line->color ){
             while(w--){
-                *(currBuffer+_IDX_(x,line->y)) |= _BIT_MASK_(x);
+                *(c_scr.buf+_IDX_(x,line->y)) |= _BIT_MASK_(x);
                 x++;
             }
         }else{
             while(w--){
-                *(currBuffer+_IDX_(x,line->y)) &= ~_BIT_MASK_(x);
+                *(c_scr.buf+_IDX_(x,line->y)) &= ~_BIT_MASK_(x);
                 x++;
             }
         }
@@ -95,26 +176,24 @@ void mcDraw_yLine(mcGeo_t * line)
     uint32_t y = line->y;
     uint32_t h = line->h;
 
-    if(mask.on){
-        if(line->y < mask.yMin)
-            y = mask.yMin;
-        if(line->y+line->h > mask.yMax)
-            h = mask.yMax - y;
-    }
-
-    if( !mask.on || (line->x>=mask.xMin && line->x<=mask.xMax) ){
+    if(line->y < c_scr.mask.yMin)
+        y = c_scr.mask.yMin;
+    if(line->y+line->h > c_scr.mask.yMax)
+        h = c_scr.mask.yMax - y;
+    
+    if( line->x>=c_scr.mask.xMin && line->x<=c_scr.mask.xMax ){
         uint32_t idx = _IDX_(line->x, y);
         uint32_t bit_mask = _BIT_MASK_(line->x);
 
         if( line->color ){
             while(h--){
-                *(currBuffer+idx) |= (bit_mask);
-                idx += SCR_WIDTH/8; 
+                *(c_scr.buf+idx) |= (bit_mask);
+                idx += c_scr.w/8; 
             }
         }else{
             while(h--){
-                *(currBuffer+idx) &= ~(bit_mask); 
-                idx += SCR_WIDTH/8; 
+                *(c_scr.buf+idx) &= ~(bit_mask); 
+                idx += c_scr.w/8; 
             }
         }
     }
@@ -142,7 +221,13 @@ void mcDraw_fRectangle(mcGeo_t * rect)
  */ 
 void mcDraw_rectangle(mcGeo_t * rect)
 {
-    mcGeo_t line = {rect->x, rect->y, rect->w, rect->h, rect->color};
+    mcGeo_t line;
+    line.x = rect->x;
+    line.y = rect->y;
+    line.w = rect->w;
+    line.h = rect->h;
+    line.color = rect->color;
+
     mcDraw_xLine(&line);
     mcDraw_yLine(&line);
     line.y += rect->h;
@@ -150,27 +235,6 @@ void mcDraw_rectangle(mcGeo_t * rect)
     line.y = rect->y;
     line.x += rect->w;
     mcDraw_yLine(&line);
-}
-
-/*
- * @brief: when enabled, only pixels within it will be drawn
- */ 
-void mcDraw_enableMask(uint16_t xMin, uint16_t xMax, uint16_t yMin, uint16_t yMax)
-{
-    mask.xMin = xMin;
-    mask.xMax = xMax;
-    mask.yMin = yMin;
-    mask.yMax = yMax;
-    mask.on = 1;
-}
-
-/*
- * @brief: disbale mask. Pixels are drawn faster when it is disbaled, 
- * but is dangerous to write outside the buffer dimmensions
- */ 
-void mcDraw_disableMask()
-{
-    mask.on = 0;
 }
 
 /*
