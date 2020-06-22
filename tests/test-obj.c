@@ -1,4 +1,4 @@
-#define _TEST_OBJ_ 1
+#define _TEST_OBJ_ 0
 
 #include "mc-obj.h"
 #include <stdlib.h>

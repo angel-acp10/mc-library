@@ -15,7 +15,6 @@
  *******************/ 
 typedef struct{
     uint16_t xMin, xMax, yMin, yMax; // all limits are included
-    _Bool on;
 }mask_t;
 
 typedef struct{

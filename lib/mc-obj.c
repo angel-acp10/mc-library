@@ -2,7 +2,7 @@
 
 #include <stdio.h>
 
-#define _TEST_OBJ_ 1
+#define _TEST_OBJ_ 0
 
  /**
   *  @brief: creates an object, but the data struct
@@ -67,20 +67,20 @@ void mcObj_delete(mcObj_t * obj)
 {
     while(obj->child_list.size)
     {
-        #ifdef _TEST_OBJ_
+        #if _TEST_OBJ_==1
         printf("o = %p Has children, removing its children first.\n", obj);
         #endif
         mcObj_delete((mcObj_t *)obj->child_list.head->data);
     }
 
     if(obj->parent == NULL && obj->scr==NULL){ 
-        #ifdef _TEST_OBJ_
+        #if _TEST_OBJ_==1
         printf("o = %p is this is a screen object, which is not allowed to be removed\n", obj);
         #endif
         //this is a screen object, which is not allowed to be removed
     }
     else if(obj->parent == obj->scr){
-        #ifdef _TEST_OBJ_
+        #if _TEST_OBJ_==1
         printf("o = %p is now removed\t[case: obj->parent == obj->scr]\n", obj);
         #endif
         //this is a normal object, but its screen is also its parent,
@@ -91,7 +91,7 @@ void mcObj_delete(mcObj_t * obj)
         obj = NULL;
     }
     else{
-        #ifdef _TEST_OBJ_
+        #if _TEST_OBJ_==1
         printf("o = %p is now removed\t[case: obj->parent != obj->scr]\n", obj);
         #endif 
         //this is a normal object, whose screen and parent objects are

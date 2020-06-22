@@ -129,11 +129,9 @@ static void mcPix_preRender(mcObj_t * p)
  */ 
 static void mcLine_preRender(mcObj_t * l)
 {
-    printf("b-> y=%u \t h=%u\n",l->geom.y, l->geom.h);
     if(l->geom.coord_type == cartesian){
         l->geom.y = (l->scr->geom.h-1) - l->geom.y;
         l->geom.h = -l->geom.h;
-        printf("cartesian\n");
     }
     
     if(l->geom.h == 0){ // horizontal line
@@ -141,7 +139,6 @@ static void mcLine_preRender(mcObj_t * l)
         l->geom.w = _ABS_(w);
         l->geom.x = _MIN_(l->geom.x, l->geom.x+w);
         l->drawToBuffer_cb = mcDraw_xLine;
-        printf("a-> y=%u \t h=%u\n",l->geom.y, l->geom.h);
 
     }else if(l->geom.w == 0){ // vertical line
         int16_t h = l->geom.h;
