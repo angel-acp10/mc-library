@@ -27,11 +27,13 @@ void mcScr_select(mcObj_t * scr);
 void mcDraw_enableMask(uint16_t xMin, uint16_t xMax, uint16_t yMin, uint16_t yMax);
 void mcDraw_disableMask();
 
-void mcDraw_pixel(uint16_t x, uint16_t y, mcColor_t color);
-void mcDraw_yLine(mcGeo_t * line);
-void mcDraw_xLine(mcGeo_t * line);
-void mcDraw_fRectangle(mcGeo_t * rect);
-void mcDraw_rectangle(mcGeo_t * rect);
+void mcDraw_pixel(mcObj_t * p);
+void mcDraw_xLine(mcObj_t * l);
+void mcDraw_yLine(mcObj_t * l);
+void mcDraw_xyLine(mcObj_t * l);
+void mcDraw_fRectangle(mcObj_t * r);
+void mcDraw_rectangle(mcObj_t * r);
+
 void mcDraw_char(uint32_t ch_idx, uint16_t x_ofs, uint16_t y_ofs, mcFont_t * f);
 
 #endif

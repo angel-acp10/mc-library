@@ -8,6 +8,7 @@
  ***********/ 
 #include "mc-draw.h"
 #include <stdio.h>
+#include <string.h>
 
 /*******************
  * Private typedefs
@@ -20,9 +21,14 @@ typedef struct{
 typedef struct{
     mask_t mask;
     uint8_t * buf;
-    uint16_t w;
-    uint16_t h;
+    uint32_t w;
+    uint32_t h;
 }currScr_t;
+
+/*******************************
+ *  Static function prototypes
+ *******************************/
+static void mcDraw_renderFrameBuf(mcObj_t * scr);
 
 /********************
  * Private variables
@@ -33,7 +39,7 @@ static currScr_t c_scr;
  * Macros
  **********/
 /* Macros related to the buffer acces */
-#define _IDX_(x,y) ( (y*c_scr.w/8) + (x/8) )
+#define _IDX_(x,y) ( ((y)*(c_scr.w)/8) + (x/8) )
 #define _BIT_(x) (x-(x/8)*8)
 #define _BIT_MASK_(x) ( 0x80>>_BIT_(x) )
 
@@ -58,14 +64,14 @@ mcObj_t * mcScr_create()
     mcObj_t * scr = mcObj_create(NULL, NULL);
 
     /* allocate memory for "data" */
-    mcObjData_scr_t * scr_data;
-    scr_data = (mcObjData_scr_t*)malloc( sizeof(mcObjData_scr_t) );
-    if(scr == NULL)
+    scr->obj_data = (mcObjData_scr_t*)malloc( sizeof(mcObjData_scr_t) );
+    if(scr->obj_data == NULL)
         return NULL;
     
-    scr_data->buffer = NULL;
-    scr_data->send_buf_cb = NULL;
-    scr->obj_data = scr_data;
+    /* set callbacks */
+    ((mcObjData_scr_t*)scr->obj_data)->buffer = NULL;
+    ((mcObjData_scr_t*)scr->obj_data)->send_buf_cb = NULL;
+    scr->drawToBuffer_cb = mcDraw_renderFrameBuf;
 
     return scr;
 }
@@ -135,33 +141,33 @@ void mcDraw_disableMask()
 /*
  * @brief: draw a single pixel
  */ 
-void mcDraw_pixel(uint16_t x, uint16_t y, mcColor_t color)
+void mcDraw_pixel(mcObj_t * p)
 {
-    _mcDraw_pixel_(x,y,color);
+    _mcDraw_pixel_(p->geom.x, p->geom.y, p->geom.color);
 }
 
 /*
  * @brief: draw an horizontal line
  */ 
-void mcDraw_xLine(mcGeo_t * line)
+void mcDraw_xLine(mcObj_t * l)
 {
-    uint32_t x = line->x;
-    uint32_t w = line->w;
+    uint16_t x = l->geom.x;
+    uint16_t w = l->geom.w;
 
-    if(line->x < c_scr.mask.xMin)     
+    if(l->geom.x < c_scr.mask.xMin)     
         x = c_scr.mask.xMin;
-    if(line->x+line->w > c_scr.mask.xMax) 
+    if(l->geom.x+l->geom.w > c_scr.mask.xMax) 
         w = c_scr.mask.xMax - x;
     
-    if( line->y>=c_scr.mask.yMin && line->y<=c_scr.mask.yMax ){
-        if( line->color ){
+    if( l->geom.y>=c_scr.mask.yMin && l->geom.y<=c_scr.mask.yMax ){
+        if( l->geom.color ){
             while(w--){
-                *(c_scr.buf+_IDX_(x,line->y)) |= _BIT_MASK_(x);
+                *(c_scr.buf+_IDX_(x,l->geom.y)) |= _BIT_MASK_(x);
                 x++;
             }
         }else{
             while(w--){
-                *(c_scr.buf+_IDX_(x,line->y)) &= ~_BIT_MASK_(x);
+                *(c_scr.buf+_IDX_(x,l->geom.y)) &= ~_BIT_MASK_(x);
                 x++;
             }
         }
@@ -171,21 +177,21 @@ void mcDraw_xLine(mcGeo_t * line)
 /*
  * @brief: draw a vertical line
  */ 
-void mcDraw_yLine(mcGeo_t * line)
+void mcDraw_yLine(mcObj_t * l)
 {
-    uint32_t y = line->y;
-    uint32_t h = line->h;
+    uint16_t y = l->geom.y;
+    uint16_t h = l->geom.h;
 
-    if(line->y < c_scr.mask.yMin)
+    if(l->geom.y < c_scr.mask.yMin)
         y = c_scr.mask.yMin;
-    if(line->y+line->h > c_scr.mask.yMax)
+    if(l->geom.y+l->geom.h > c_scr.mask.yMax)
         h = c_scr.mask.yMax - y;
     
-    if( line->x>=c_scr.mask.xMin && line->x<=c_scr.mask.xMax ){
-        uint32_t idx = _IDX_(line->x, y);
-        uint32_t bit_mask = _BIT_MASK_(line->x);
+    if( l->geom.x>=c_scr.mask.xMin && l->geom.x<=c_scr.mask.xMax ){
+        uint32_t idx = _IDX_(l->geom.x, y);
+        uint16_t bit_mask = _BIT_MASK_(l->geom.x);
 
-        if( line->color ){
+        if( l->geom.color ){
             while(h--){
                 *(c_scr.buf+idx) |= (bit_mask);
                 idx += c_scr.w/8; 
@@ -199,19 +205,59 @@ void mcDraw_yLine(mcGeo_t * line)
     }
 }
 
+
+/*
+ * @brief: draws any line, including non horizontal or vertical 
+ * @Bresenham's line algorithm: https://en.wikipedia.org/wiki/Bresenham%27s_line_algorithm
+*/
+void mcDraw_xyLine(mcObj_t * l)
+{
+    int16_t x0 = l->geom.x;
+    int16_t x1 = l->geom.x + l->geom.w;
+    int16_t y0 = l->geom.y;
+    int16_t y1 = l->geom.y + l->geom.h;
+
+    int16_t dx =  abs(x1-x0);
+    int16_t sx = x0<x1 ? 1 : -1;
+    int16_t dy = -abs(y1-y0);
+    int16_t sy = y0<y1 ? 1 : -1;
+    int16_t err = dx+dy;  /* error value e_xy */
+
+    int16_t e2;
+
+    while (1){/* loop */
+        _mcDraw_pixel_(x0,y0, l->geom.color);
+
+        if (x0==x1 && y0==y1)
+            break;
+
+        e2 = 2*err;
+
+        if (e2 >= dy){ /* e_xy+e_x > 0 */
+            err += dy;
+            x0 += sx;
+        }
+
+        if (e2 <= dx){ /* e_xy+e_y < 0 */
+            err += dx;
+            y0 += sy;
+        }
+    }
+}
+
 /*
  * @brief: draw a filled rectangle
  */ 
-void mcDraw_fRectangle(mcGeo_t * rect)
+void mcDraw_fRectangle(mcObj_t * r)
 {
-    mcGeo_t line = *rect;
+    mcObj_t line = *r;
 
-    uint16_t x = rect->x;
-    uint16_t w = rect->w;
+    uint16_t x = r->geom.x;
+    uint16_t w = r->geom.w;
     while(w)
     {
         mcDraw_yLine(&line);
-        line.x++;
+        line.geom.x++;
         w--;
     }
 }
@@ -219,26 +265,21 @@ void mcDraw_fRectangle(mcGeo_t * rect)
 /*
  * @brief: draw an empty rectangle
  */ 
-void mcDraw_rectangle(mcGeo_t * rect)
+void mcDraw_rectangle(mcObj_t * r)
 {
-    mcGeo_t line;
-    line.x = rect->x;
-    line.y = rect->y;
-    line.w = rect->w;
-    line.h = rect->h;
-    line.color = rect->color;
+    mcObj_t line = *r;
 
     mcDraw_xLine(&line);
     mcDraw_yLine(&line);
-    line.y += rect->h;
+    line.geom.y += r->geom.h-1;
     mcDraw_xLine(&line);
-    line.y = rect->y;
-    line.x += rect->w;
+    line.geom.y = r->geom.y;
+    line.geom.x += r->geom.w-1;
     mcDraw_yLine(&line);
 }
 
 /*
- * @biref: Given a "ch_idx" draws the corresponding character with the offset
+ * @brief: Given a "ch_idx" draws the corresponding character with the offset
  * x_ofs and y_ofs and font f. This function is here due to optimization purposes, 
  * but should in "mc-text.c" module.
  */ 
@@ -278,5 +319,25 @@ void mcDraw_char(uint32_t ch_idx, uint16_t x_ofs, uint16_t y_ofs, mcFont_t * f)
             }
         }
         px--;
+    }
+}
+
+/*****************************
+ * Static funtion definitions 
+ *****************************/
+static void mcDraw_renderFrameBuf(mcObj_t * scr)
+{
+    /* clear the entire buffer */
+    uint8_t * buf = ((mcObjData_scr_t*)scr->obj_data)->buffer;
+    for(uint32_t i = 0; i<1280*640/8; i++)
+        *(buf + i) = 0;
+
+    /* draw each object in scr child_list */
+    node_t * node_ptr = scr->child_list.head;
+    while(node_ptr){
+        mcObj_t * obj_ptr = ((mcObj_t *)node_ptr->data);
+        obj_ptr->drawToBuffer_cb(obj_ptr);
+
+        node_ptr = node_ptr->next;
     }
 }

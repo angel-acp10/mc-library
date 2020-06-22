@@ -17,6 +17,18 @@ enum{
 };
 typedef uint8_t mcColor_t;
 
+enum{
+    empty = 0,   //just contour
+    filled       //contour + inside
+};
+typedef uint8_t mcShape_t;
+
+enum{
+    screen = 0,
+    cartesian
+};
+typedef uint8_t mcCoord_t;
+
 enum {
     MC_ALIGN_CENTER = 0,
     MC_ALIGN_IN_TOP_LEFT,
@@ -50,21 +62,26 @@ typedef struct{
     mcColor_t color;
 }mcGeo_t;
 
-typedef void(*mcDraw_cb_t)(struct mcObj* obj);
-typedef void(*mcDelete_cb_t)(struct mcObj* obj);
+
+typedef void(*mcCb_drawBuffer_t)(struct mcObj* obj);
+typedef void(*mcCb_deleteObjData_t)(struct mcObj* obj);
 
 typedef struct mcObj{
     struct mcObj * scr;
     struct mcObj * parent;
-    list_t child_list;
 
     mcGeo_t geom;
 
-    mcDraw_cb_t drawToBuffer_cb;
-    mcDelete_cb_t delete_cb;
-    _Bool refreshBuffer;
-
+    //object specific data
     void * obj_data; // points to an object specific structure
+    mcCb_deleteObjData_t delete_obj_data_cb;
+
+    // child_list
+    list_t child_list;
+    
+    //buffer
+    mcCb_drawBuffer_t drawToBuffer_cb;
+
 }mcObj_t;
 
 /**********************

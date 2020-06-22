@@ -6,6 +6,7 @@ add_executable(test-draw
 	test-draw.c) 
 target_link_libraries(test-draw ${SDL2_LIBRARIES})
 target_link_libraries(test-draw lib)
+target_link_libraries(test-draw m)
 
 # test linked list
 add_executable(test-ll

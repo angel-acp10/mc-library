@@ -5,6 +5,8 @@ add_library(lib
 	mc-text.c
 	mc-obj.h
 	mc-obj.c
+	mc-shapes.h
+	mc-shapes.c
 	linked_list.h
 	linked_list.c
 	)

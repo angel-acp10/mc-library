@@ -46,7 +46,12 @@ mcObj_t* mcObj_create(mcObj_t *parent, mcObj_t *scr)
     obj->geom.align_type = MC_ALIGN_CENTER;
     obj->geom.align_ref_obj = NULL;
 
-    obj->refreshBuffer = 1;
+    /* by default, obj_data is null */
+    obj->obj_data = NULL;
+
+    /* initialize callback to null */
+    obj->delete_obj_data_cb = NULL;
+    obj->drawToBuffer_cb = NULL;
 
     return obj;
 }
@@ -68,7 +73,7 @@ void mcObj_delete(mcObj_t * obj)
 
     if(obj->parent == NULL && obj->scr==NULL){ 
         #ifdef _TEST_OBJ_
-        printf("o = %p is now removed\t[case: obj->parent == NULL && obj->scr == NULL]\n", obj);
+        printf("o = %p is this is a screen object, which is not allowed to be removed\n", obj);
         #endif
         //this is a screen object, which is not allowed to be removed
     }
