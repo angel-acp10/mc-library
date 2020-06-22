@@ -3,6 +3,7 @@
 #include "mc-shapes.h"
 #include <unistd.h>
 #include <math.h>
+#include <stdio.h>
 
 #define SCR_WIDTH 1280
 #define SCR_HEIGHT 640
@@ -12,7 +13,11 @@
 SDL_Window *window;
 SDL_Renderer *renderer;
 
+uint8_t buf[SCR_WIDTH*SCR_HEIGHT/8];
+mcObj_t * scr;
+
 void display_buffer(uint8_t *buffer);
+void refresh_frame();
 
 int main()
 {
@@ -25,8 +30,7 @@ int main()
     SDL_RenderPresent(renderer);
 
     // mc lib init
-    uint8_t buf[SCR_WIDTH*SCR_HEIGHT/8]={0};
-    mcObj_t * scr = mcScr_create();
+    scr = mcScr_create();
     mcScr_setResolution(scr, SCR_WIDTH, SCR_HEIGHT);
     mcScr_setBuffer(scr, buf);
     mcScr_setDisplayCb(scr, display_buffer);
@@ -36,43 +40,34 @@ int main()
     mcObj_t * pix[SCR_WIDTH];
     for(int i = 0; i<SCR_WIDTH; i++){
         pix[i] = mcPix_create(scr,scr);
-        mcPix_setCoord( pix[i], random()%SCR_WIDTH, random()%SCR_HEIGHT, screen );
-        mcPix_setColor(pix[i], white);
+        mcObj_setPos( pix[i], random()%SCR_WIDTH, random()%SCR_HEIGHT);
+        mcObj_setColor(pix[i], white);
     }
-    scr->drawToBuffer_cb(scr); 
-    ((mcObjData_scr_t*)scr->obj_data)->send_buf_cb(buf);
-    sleep(2);
-    mcObj_delete(scr); //delete all scr child_list but not scr
+    refresh_frame();
 
     //test xLine (horizontal line)
     mcObj_t * xLine[SCR_HEIGHT];
     for(int y=0; y<SCR_HEIGHT; y++){
         xLine[y] = mcLine_create(scr,scr);
-        mcLine_setCoord(xLine[y], 0, y, SCR_WIDTH-1, y, screen);
+        mcObj_set2Points(xLine[y], 0, y, SCR_WIDTH-1, y);
         if(y%2)
-            mcLine_setColor(xLine[y], white);
+            mcObj_setColor(xLine[y], white);
         else
-            mcLine_setColor(xLine[y], black);
+            mcObj_setColor(xLine[y], black);
     }
-    scr->drawToBuffer_cb(scr); 
-    ((mcObjData_scr_t*)scr->obj_data)->send_buf_cb(buf);
-    sleep(2);
-    mcObj_delete(scr); //delete all scr child_list but not scr
+    refresh_frame();
 
     //test yLine (vertical)
     mcObj_t * yLine[SCR_WIDTH];
     for(int x=0; x<SCR_WIDTH; x++){
         yLine[x] = mcLine_create(scr,scr);
-        mcLine_setCoord(yLine[x], x, 0, x, SCR_HEIGHT-1, screen);
+        mcObj_set2Points(yLine[x], x, 0, x, SCR_HEIGHT-1);
         if(x%2)
-            mcLine_setColor(yLine[x], white);
+            mcObj_setColor(yLine[x], white);
         else
-            mcLine_setColor(yLine[x], black);
+            mcObj_setColor(yLine[x], black);
     }
-    scr->drawToBuffer_cb(scr); 
-    ((mcObjData_scr_t*)scr->obj_data)->send_buf_cb(buf);
-    sleep(2);
-    mcObj_delete(scr); //delete all scr child_list but not scr
+    refresh_frame();
 
     //test xyLine (anyline) by plotting a polygon
     const int N = 5;
@@ -89,12 +84,10 @@ int main()
     for(int i = 0; i<N; i++){
         int j = (i==N-1)? 0 : i+1;
         xyLinePol[i] = mcLine_create(scr,scr);
-        mcLine_setCoord(xyLinePol[i], xpol[i]+x_offs, ypol[i]+y_offs, xpol[j]+x_offs, ypol[j]+y_offs, cartesian);
+        mcObj_set2Points(xyLinePol[i], xpol[i]+x_offs, ypol[i]+y_offs, xpol[j]+x_offs, ypol[j]+y_offs);
+        mcObj_selectCoord(xyLinePol[i], cartesian);
     }
-    scr->drawToBuffer_cb(scr); 
-    ((mcObjData_scr_t*)scr->obj_data)->send_buf_cb(buf);
-    sleep(2);
-    mcObj_delete(scr); //delete all scr child_list but not scr
+    refresh_frame();
 
     // sdl close window
     while(!quit)
@@ -136,4 +129,11 @@ void display_buffer(uint8_t *buffer)
         pixels--;
     }
     SDL_RenderPresent(renderer);
+}
+
+void refresh_frame(){
+    scr->drawToBuffer_cb(scr); 
+    ((mcObjData_scr_t*)scr->obj_data)->send_buf_cb(buf);
+    sleep(2);
+    mcObj_delete(scr); //delete all scr child_list but not scr
 }

@@ -52,19 +52,26 @@ enum {
     MC_ALIGN_OUT_RIGHT_MID,
     MC_ALIGN_OUT_RIGHT_BOTTOM,
 };
-typedef uint8_t mcAlign_t;
+typedef uint8_t mcRelPos_t;
 
 typedef struct{
-    struct mcObj * align_ref_obj;
-    mcAlign_t align_type;
-    int16_t x, y;
+    struct mcObj * ref_obj;
+    mcRelPos_t pos;
+    int16_t x_offs, y_offs;
+}mcAlign_t;
+
+typedef struct{
+    mcAlign_t align;
+    uint16_t x, y;
     int16_t w, h;
+    mcCoord_t coord_type;
     mcColor_t color;
 }mcGeo_t;
 
 
 typedef void(*mcCb_drawBuffer_t)(struct mcObj* obj);
 typedef void(*mcCb_deleteObjData_t)(struct mcObj* obj);
+typedef void(*mcCb_preRender_t)(struct mcObj* obj);
 
 typedef struct mcObj{
     struct mcObj * scr;
@@ -78,6 +85,10 @@ typedef struct mcObj{
 
     // child_list
     list_t child_list;
+
+    //update pre-render
+    _Bool prerender_flg;
+    mcCb_preRender_t preRender_cb;
     
     //buffer
     mcCb_drawBuffer_t drawToBuffer_cb;
@@ -87,28 +98,67 @@ typedef struct mcObj{
 /**********************
  * Function prototypes
  **********************/
- /* @brief: creates an object, but the data struct
+  /**
+  *  @brief: creates an object, but the data struct
   * is not malloc'd.
   * @parent: pointer to its parent obj
   * @scr: pointer to the desired screen
   * @return: a pointer to the created obj */
 mcObj_t* mcObj_create(mcObj_t *parent, mcObj_t *scr);
 
-/*
+/**
  * @brief: Not only deletes an object from the proper screen child_list, but
  * also removes all the objects found in the object child_list.
  * @obj: pointer to the object to be deleted
  */
 void mcObj_delete(mcObj_t * obj);
 
-/* @brief: aligns one object respect to another one
+/* @brief: set the alignment parameters to align one object to another one
  * @obj: object to be aligned
- * @alignObj: reference object used to align obj
- * @align: predefined alignment
+ * @align_obj: reference object used to align obj
+ * @alignment_type: predefined alignment
  * @x_offset: given a predefined alignment, "obj" can be moved along
  * x axis using this variable
  * @y_offset: given a predefined alignment, "obj" can be moved along
  * y axis using this variable */
-void mcObj_align(mcObj_t * obj, mcObj_t * align_obj, mcAlign_t alignment_type, int16_t x_offset, int16_t y_offset);
+void mcObj_align(mcObj_t * obj, mcObj_t * align_obj, mcRelPos_t alignment_type,
+    int16_t x_offset, int16_t y_offset);
+
+/* @brief: aligns one object to another one (called by obj->preRender_cb)
+ * @obj: object to be aligned with obj->geom.align.ref_obj 
+ */ 
+void mcObj_align_prerender(mcObj_t * obj);
+
+/**
+ * @brief: set top left x,y coordinates of an object
+ * @param: x: x coordinate
+ * @param: y: y coordinate
+ */
+void mcObj_setPos(mcObj_t * obj, uint16_t x, uint16_t y);
+
+/**
+ * @brief: set width and height of an object
+ * @param: width
+ * @param: height
+ */
+void mcObj_setDim(mcObj_t * obj, int16_t width, int16_t height);
+
+/**
+ * @brief: define an object position and dimmensions using two points
+ * @param: point0: x0, y0
+ * @param: point1: x1, y1
+ */ 
+void mcObj_set2Points(mcObj_t * obj, uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1);
+
+/**
+ * @brief: set color of an object
+ * @param: color
+ */
+void mcObj_setColor(mcObj_t * obj, mcColor_t color);
+
+/**
+ * @brief: select default screen coordinate or change to cartesian ones
+ */ 
+void mcObj_selectCoord(mcObj_t * obj, mcCoord_t coord_type);
 
 #endif

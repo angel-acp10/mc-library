@@ -336,6 +336,8 @@ static void mcDraw_renderFrameBuf(mcObj_t * scr)
     node_t * node_ptr = scr->child_list.head;
     while(node_ptr){
         mcObj_t * obj_ptr = ((mcObj_t *)node_ptr->data);
+        if(obj_ptr->prerender_flg)
+            obj_ptr->preRender_cb(obj_ptr);
         obj_ptr->drawToBuffer_cb(obj_ptr);
 
         node_ptr = node_ptr->next;
