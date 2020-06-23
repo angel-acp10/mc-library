@@ -38,6 +38,7 @@ mcObj_t * mcPix_create(mcObj_t *parent, mcObj_t *scr)
 
     /* callbacks */
     pix->delete_obj_data_cb = NULL;
+    pix->prerender_flg = 1;
     pix->preRender_cb = mcPix_preRender;
     pix->drawToBuffer_cb = mcDraw_pixel;
 
@@ -63,6 +64,7 @@ mcObj_t * mcLine_create(mcObj_t * parent, mcObj_t * scr)
 
     /* callbacks */
     line->delete_obj_data_cb = NULL;
+    line->prerender_flg = 1;
     line->preRender_cb = mcLine_preRender;
     line->drawToBuffer_cb = mcDraw_xyLine;
 
@@ -88,6 +90,7 @@ mcObj_t * mcRect_create(mcObj_t *parent, mcObj_t *scr)
 
     /* callbacks */
     rec->delete_obj_data_cb = NULL;
+    rec->prerender_flg = 1;
     rec->preRender_cb = mcRect_preRender;
     rec->drawToBuffer_cb = mcDraw_rectangle;
 

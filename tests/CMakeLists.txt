@@ -17,3 +17,10 @@ target_link_libraries(test-ll lib)
 add_executable(test-obj
 	test-obj.c)
 target_link_libraries(test-obj lib)
+
+# test text
+add_executable(test-text
+	test-text.c) 
+target_link_libraries(test-text ${SDL2_LIBRARIES})
+target_link_libraries(test-text lib)
+target_link_libraries(test-text fonts)
