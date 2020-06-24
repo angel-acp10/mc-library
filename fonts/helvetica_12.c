@@ -4423,6 +4423,7 @@ static const uc_range_t uc_range[] = {
 
 mcFont_t helvetica_12 = {
 	.line_height = 36,
+	.line_spacing = 5,
 	.fix_kern = 2,
 	.uc_rg = uc_range,
 	.uc_rg_n = 2,

@@ -18,6 +18,7 @@ typedef struct{
 
 typedef struct{
 	uint8_t line_height;
+	uint8_t line_spacing;
 	uint8_t fix_kern;
 	const uc_range_t* uc_rg;
 	const uint16_t uc_rg_n;

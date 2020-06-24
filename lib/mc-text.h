@@ -6,16 +6,25 @@
 #include "mc-obj.h"
 
 typedef struct{
-    uint16_t x, y;
+    uint16_t x, y, w;
     int16_t start_idx, end_idx;
 }mcTextLine_t;
 
+enum{
+    MC_TEXT_ALIGN_LEFT = 0,
+    MC_TEXT_ALIGN_CENTER,
+    MC_TEXT_ALIGN_RIGHT
+};
+typedef uint8_t mcTextAlign_t;
+
 typedef struct{
+    uint16_t usr_max_width;
     mcFont_t * font;
 
     char * str;
-    mcTextLine_t * text_line;
-    uint8_t N_lines;
+    mcTextLine_t * t_line;
+    uint16_t N_lines;
+    mcTextAlign_t align;
 }mcObjData_text_t;
 
 mcObj_t * mcText_create(mcObj_t *parent, mcObj_t *scr);
