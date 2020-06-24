@@ -65,12 +65,14 @@ int main()
     mcObj_t * txt = mcText_create(scr,scr);
     mcText_setStr(txt, "Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type");
     mcText_setFont(txt, &helvetica_12);
-    mcObj_setPos(txt, 0,0);
+    //mcObj_setPos(txt, 0,0);
+    mcObj_align(txt, scr, MC_ALIGN_CENTER, 0, 0);
     mcText_setWidth(txt, 500);
+    mcText_setAlign(txt, MC_TEXT_ALIGN_CENTER);
 
-    txt->preRender_cb(txt);
+    //txt->preRender_cb(txt);
 
-    //refresh_frame();
+    refresh_frame();
 
     // sdl close window
     while(!quit)

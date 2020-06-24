@@ -44,17 +44,21 @@ mcObj_t * mcText_create(mcObj_t *parent, mcObj_t *scr)
     t->preRender_cb = mcText_preRender;
     t->drawToBuffer_cb = mcDraw_text;
 
+    t->prerender_flg = 1;
+    
     return t;
 }
 
 void mcText_setFont(mcObj_t * t, mcFont_t * font)
 {
     ((mcObjData_text_t*)t->obj_data)->font = font;
+    t->prerender_flg = 1;
 }
 
 void mcText_setWidth(mcObj_t * t, uint16_t width)
 {
     ((mcObjData_text_t*)t->obj_data)->usr_max_width = width;
+    t->prerender_flg = 1;
 }
 
 void mcText_setStr(mcObj_t * t, char * str)
@@ -79,35 +83,13 @@ void mcText_setStr(mcObj_t * t, char * str)
     ptr_cpy[i] = '\0'; 
 
     ((mcObjData_text_t*)t->obj_data)->str = ptr_cpy;
+    t->prerender_flg = 1;
 }
 
-/*
- * @biref: Draws string "str" with the offset x_ofs and y_ofs and font f
- */ 
-void drawString(char * str, uint16_t x_ofs, uint16_t y_ofs, mcFont_t * f)
+void mcText_setAlign(mcObj_t * t, mcTextAlign_t txt_align)
 {
-    uint32_t uc, ch_idx;
-    uint8_t n_char; 
-
-    uint16_t x_char = x_ofs;
-    uint16_t y_char;
-    while(*str){
-        // get unicode code point and its number of used bytes "n_char"
-        uc = get_unicode(str, &n_char);
-        printf("uc_code_point = %u\n", uc);
-
-        // check if glyph is included in font & get ch_idx
-        if(!get_chIdx(uc, &ch_idx, f))
-            return;
-
-        //set the appropiate vertical offset and draw the char
-        y_char = y_ofs + f->ch_info[ch_idx].y_offset;
-        mcDraw_char(ch_idx, x_char, y_char, f);
-
-        // move cursor
-        x_char += f->ch_info[ch_idx].w + f->fix_kern;
-        str += n_char;
-    }
+    ((mcObjData_text_t*)t->obj_data)->align = txt_align;
+    t->prerender_flg = 1;
 }
 
 static void mcText_deleteObjData(mcObj_t * t)
@@ -201,7 +183,41 @@ static void mcText_preRender(mcObj_t * t)
 
 static void mcDraw_text(mcObj_t * t)
 {
+    mcObjData_text_t * data = ((mcObjData_text_t*)t->obj_data);
+    mcFont_t * f = ((mcObjData_text_t*)t->obj_data)->font;
+    char * str = ((mcObjData_text_t*)t->obj_data)->str;
 
+    int16_t idx;
+    uint32_t uc, ch_idx;
+    uint8_t n_char; 
+
+    uint16_t x_char, y_char;
+
+    for(uint16_t l=0; l<data->N_lines; l++)
+    {
+        idx = data->t_line[l].start_idx;
+
+        x_char = data->t_line[l].x;
+        
+        while(idx <= data->t_line[l].end_idx)
+        {
+            // get unicode code point and its number of used bytes "n_char"
+            uc = get_unicode(str+idx, &n_char);
+            printf("uc_code_point = %u\n", uc);
+
+            // check if glyph is included in font & get ch_idx
+            if(!get_chIdx(uc, &ch_idx, f))
+                return;
+
+            //set the appropiate vertical offset and draw the char
+            y_char = data->t_line[l].y + f->ch_info[ch_idx].y_offset;
+            mcDraw_char(ch_idx, x_char, y_char, f);
+
+            // move cursor
+            x_char += f->ch_info[ch_idx].w + f->fix_kern;
+            idx += n_char;
+        }
+    }
 }
 
 /**

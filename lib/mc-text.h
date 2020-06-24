@@ -31,6 +31,6 @@ mcObj_t * mcText_create(mcObj_t *parent, mcObj_t *scr);
 void mcText_setFont(mcObj_t * t, mcFont_t * font);
 void mcText_setWidth(mcObj_t * t, uint16_t width);
 void mcText_setStr(mcObj_t * t, char * str);
-void drawString(char * str, uint16_t x_ofs, uint16_t y_ofs, mcFont_t * f);
+void mcText_setAlign(mcObj_t * t, mcTextAlign_t txt_align);
 
 #endif
