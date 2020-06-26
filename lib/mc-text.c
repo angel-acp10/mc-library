@@ -31,6 +31,12 @@ mcObj_t * mcText_create(mcObj_t *parent, mcObj_t *scr)
     ((mcObjData_text_t*)t->obj_data)->N_lines = 0;
     ((mcObjData_text_t*)t->obj_data)->align = MC_TEXT_ALIGN_LEFT;
     ((mcObjData_text_t*)t->obj_data)->usr_max_width = scr->geom.w;
+    ((mcObjData_text_t*)t->obj_data)->margin.l = 0;
+    ((mcObjData_text_t*)t->obj_data)->margin.r = 0;
+    ((mcObjData_text_t*)t->obj_data)->margin.t = 0;
+    ((mcObjData_text_t*)t->obj_data)->margin.b = 0;
+    //callback to draw text background
+    ((mcObjData_text_t*)t->obj_data)->back_rectangle = nothing;
 
     /* init coordinates and color */
     t->geom.x = 0;
@@ -92,6 +98,26 @@ void mcText_setAlign(mcObj_t * t, mcTextAlign_t txt_align)
     t->prerender_flg = 1;
 }
 
+void mcText_setMargins(mcObj_t * t, uint8_t left, uint8_t right, uint8_t top, uint8_t bottom)
+{
+    ((mcObjData_text_t*)t->obj_data)->margin.l = left;
+    ((mcObjData_text_t*)t->obj_data)->margin.r = right;
+    ((mcObjData_text_t*)t->obj_data)->margin.t = top;
+    ((mcObjData_text_t*)t->obj_data)->margin.b = bottom;
+
+    t->prerender_flg = 1;
+}
+
+/**
+ * @brief: set text background
+ */ 
+void mcText_defineBackground(mcObj_t * t, mcShape_t shape_type)
+{
+    ((mcObjData_text_t*)t->obj_data)->back_rectangle = shape_type;
+
+    t->prerender_flg = 1;
+}
+
 static void mcText_deleteObjData(mcObj_t * t)
 {
     free( ((mcObjData_text_t*)t->obj_data)->str );
@@ -132,16 +158,18 @@ static void mcText_preRender(mcObj_t * t)
         data->N_lines++;
     }
 
-    for(uint16_t i = 0; i<data->N_lines; i++){
-        printf("L=%u \t s=%u \t e=%u\n", i, data->t_line[i].start_idx, data->t_line[i].end_idx);
-    }
+    //for(uint16_t i = 0; i<data->N_lines; i++)
+    //    printf("L=%u \t s=%u \t e=%u\n", i, data->t_line[i].start_idx, data->t_line[i].end_idx);
+    
 
     // compute maximum width and height of the entire paragraph
-    t->geom.w = 0;
+    uint16_t txt_width = 0;
     for(uint16_t l = 0; l<data->N_lines; l++)
-        t->geom.w  = _MAX_( t->geom.w , data->t_line[l].w );
-    
-    t->geom.h = (f->line_height * data->N_lines) + (f->line_spacing*(data->N_lines+1));
+        txt_width  = _MAX_( txt_width , data->t_line[l].w );
+    t->geom.w = txt_width + data->margin.l + data->margin.r;
+
+    t->geom.h = (f->line_height * data->N_lines) + (f->line_spacing*(data->N_lines-1));
+    t->geom.h += data->margin.t + data->margin.b;
     
     // in case the object is aligned, compute the new x and y coordinates
     mcObj_align_prerender(t);
@@ -150,29 +178,29 @@ static void mcText_preRender(mcObj_t * t)
     switch (data->align)
     {
     case MC_TEXT_ALIGN_CENTER:
-        data->t_line[0].x = (t->geom.w - data->t_line[0].w)/2 + t->geom.x;
-        data->t_line[0].y = t->geom.y + f->line_spacing;
+        data->t_line[0].x = (txt_width - data->t_line[0].w)/2 + t->geom.x + data->margin.l;
+        data->t_line[0].y = t->geom.y + data->margin.t;
         for(uint16_t l = 1; l<data->N_lines; l++){
-            data->t_line[l].x = (t->geom.w - data->t_line[l].w)/2 + t->geom.x;
+            data->t_line[l].x = (txt_width - data->t_line[l].w)/2 + t->geom.x + data->margin.l;
             data->t_line[l].y = data->t_line[l-1].y + f->line_height + f->line_spacing;
         }
         break;
     
     case MC_TEXT_ALIGN_RIGHT:
-        data->t_line[0].x = (t->geom.w - data->t_line[0].w) + t->geom.x;
-        data->t_line[0].y = t->geom.y + f->line_spacing;
+        data->t_line[0].x = (t->geom.w - data->t_line[0].w - data->margin.r) + t->geom.x;
+        data->t_line[0].y = t->geom.y + data->margin.t;
         for(uint16_t l = 1; l<data->N_lines; l++){
-            data->t_line[l].x = (t->geom.w - data->t_line[l].w) + t->geom.x;
+            data->t_line[l].x = (t->geom.w - data->t_line[l].w - data->margin.r) + t->geom.x;
             data->t_line[l].y = data->t_line[l-1].y + f->line_height + f->line_spacing;
         }
         break;
 
     case MC_TEXT_ALIGN_LEFT:
     default:
-        data->t_line[0].x = t->geom.x;
-        data->t_line[0].y = t->geom.y + f->line_spacing;
+        data->t_line[0].x = t->geom.x + data->margin.l;
+        data->t_line[0].y = t->geom.y + data->margin.t;
         for(uint16_t l = 1; l<data->N_lines; l++){
-            data->t_line[l].x = t->geom.x;
+            data->t_line[l].x = t->geom.x + data->margin.l;
             data->t_line[l].y = data->t_line[l-1].y + f->line_height + f->line_spacing;
         }
         break;
@@ -187,6 +215,24 @@ static void mcDraw_text(mcObj_t * t)
     mcFont_t * f = ((mcObjData_text_t*)t->obj_data)->font;
     char * str = ((mcObjData_text_t*)t->obj_data)->str;
 
+    /* background */
+    switch(data->back_rectangle){
+    case filled:
+        t->geom.color = !t->geom.color; // use opposite color for the background
+        mcDraw_fRectangle(t);
+        t->geom.color = !t->geom.color;
+        break;
+
+    case border:
+        mcDraw_rectangle(t);
+        break;
+    
+    case nothing:
+    default:
+        break;
+    }
+
+    /* text */
     int16_t idx;
     uint32_t uc, ch_idx;
     uint8_t n_char; 
@@ -203,7 +249,7 @@ static void mcDraw_text(mcObj_t * t)
         {
             // get unicode code point and its number of used bytes "n_char"
             uc = get_unicode(str+idx, &n_char);
-            printf("uc_code_point = %u\n", uc);
+            //printf("uc_code_point = %u\n", uc);
 
             // check if glyph is included in font & get ch_idx
             if(!get_chIdx(uc, &ch_idx, f))
@@ -211,7 +257,7 @@ static void mcDraw_text(mcObj_t * t)
 
             //set the appropiate vertical offset and draw the char
             y_char = data->t_line[l].y + f->ch_info[ch_idx].y_offset;
-            mcDraw_char(ch_idx, x_char, y_char, f);
+            mcDraw_char(t, ch_idx, x_char, y_char);
 
             // move cursor
             x_char += f->ch_info[ch_idx].w + f->fix_kern;
@@ -307,7 +353,7 @@ static mcTextLine_t getLine(mcObj_t * obj, uint16_t s_idx)
     uint8_t n_ch;
     uint16_t pix_len = 0;
 
-    while( pix_len<=data->usr_max_width && data->str[idx] )
+    while( pix_len<=(data->usr_max_width - data->margin.l - data->margin.r) && data->str[idx] )
     {
         // if a space is detected, set end_idx to the previous char
         if(data->str[idx] == ' '){

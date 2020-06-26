@@ -2,7 +2,7 @@
 #define _MC_DRAW_H_
 
 #include <stdint.h>
-#include "mc-font.h"
+#include "mc-text.h"
 #include "mc-obj.h"
 
 /*************
@@ -34,6 +34,6 @@ void mcDraw_xyLine(mcObj_t * l);
 void mcDraw_fRectangle(mcObj_t * r);
 void mcDraw_rectangle(mcObj_t * r);
 
-void mcDraw_char(uint32_t ch_idx, uint16_t x_ofs, uint16_t y_ofs, mcFont_t * f);
+void mcDraw_char(mcObj_t* text, uint32_t ch_idx, uint16_t x_ofs, uint16_t y_ofs);
 
 #endif

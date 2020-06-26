@@ -86,7 +86,11 @@ void mcObj_delete(mcObj_t * obj)
         //this is a normal object, but its screen is also its parent,
         //so the object will only be removed from scr child_list
         ll_searchData_deleteItem(&obj->scr->child_list, obj);
-        
+
+        //if object has object data, free it
+        if(obj->delete_obj_data_cb != NULL)
+            obj->delete_obj_data_cb(obj);
+
         free(obj);
         obj = NULL;
     }
@@ -103,6 +107,10 @@ void mcObj_delete(mcObj_t * obj)
 
         //remove it from the parent screen child_list
         ll_searchData_deleteItem(&obj->parent->child_list, obj);
+
+        //if object has object data, free it
+        if(obj->delete_obj_data_cb != NULL)
+            obj->delete_obj_data_cb(obj);
 
         free(obj);
         obj = NULL;

@@ -1,6 +1,7 @@
 #include <SDL2/SDL.h>
 #include "mc-text.h"
 #include "mc-draw.h"
+#include "mc-shapes.h"
 #include <stdio.h>
 
 #define SCR_WIDTH 1280
@@ -69,10 +70,13 @@ int main()
     mcObj_align(txt, scr, MC_ALIGN_CENTER, 0, 0);
     mcText_setWidth(txt, 500);
     mcText_setAlign(txt, MC_TEXT_ALIGN_CENTER);
+    mcText_setMargins(txt, 100,10,10,100);
+    mcText_defineBackground(txt, border);
+    mcObj_setColor(txt,white);
 
-    //txt->preRender_cb(txt);
 
     refresh_frame();
+    mcObj_delete(txt);
 
     // sdl close window
     while(!quit)

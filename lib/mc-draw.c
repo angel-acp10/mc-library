@@ -282,14 +282,17 @@ void mcDraw_rectangle(mcObj_t * r)
  * x_ofs and y_ofs and font f. This function is here due to optimization purposes, 
  * but should in "mc-text.c" module.
  */ 
-void mcDraw_char(uint32_t ch_idx, uint16_t x_ofs, uint16_t y_ofs, mcFont_t * f)
+void mcDraw_char(mcObj_t* text, uint32_t ch_idx, uint16_t x_ofs, uint16_t y_ofs)
 {
+    mcFont_t * f = ((mcObjData_text_t*)text->obj_data)->font;
+    mcColor_t color = text->geom.color;
+    
     uint32_t bm_idx;
-    printf("ch_idx = %u\n", ch_idx);
+    //printf("ch_idx = %u\n", ch_idx);
 
     // using ch_idx, get bitmap index
     bm_idx = f->ch_info[ch_idx].bitmap_idx;
-    printf("bm_idx = %u\n", bm_idx);
+    //printf("bm_idx = %u\n", bm_idx);
 
     // draw the glyph
     uint32_t px = f->ch_info[ch_idx].w * f->ch_info[ch_idx].h;
@@ -299,9 +302,7 @@ void mcDraw_char(uint32_t ch_idx, uint16_t x_ofs, uint16_t y_ofs, mcFont_t * f)
     {
         // set/reset pixel
         if(f->bm[bm_idx] & 0x80>>bit){   
-            _mcDraw_pixel_(x+x_ofs, y+y_ofs, white);
-        }else{        
-            _mcDraw_pixel_(x+x_ofs, y+y_ofs, black);
+            _mcDraw_pixel_(x+x_ofs, y+y_ofs, color);
         }
         
         x++;
