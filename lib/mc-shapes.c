@@ -23,6 +23,9 @@ static void mcRect_preRender(mcObj_t * r);
  *****************************/
 /**
  * @brief: creates a pixel object
+ * @parent: parent object of the returned one.
+ * @scr: screen where the returned object will be displayed.
+ * @return: new pixel object
  */ 
 mcObj_t * mcPix_create(mcObj_t *parent, mcObj_t *scr)
 {
@@ -47,6 +50,9 @@ mcObj_t * mcPix_create(mcObj_t *parent, mcObj_t *scr)
 
 /**
  * @brief: creates a line object
+ * @parent: parent object of the returned one.
+ * @scr: screen where the returned object will be displayed.
+ * @return: new line object
  */ 
 mcObj_t * mcLine_create(mcObj_t * parent, mcObj_t * scr)
 {
@@ -73,6 +79,9 @@ mcObj_t * mcLine_create(mcObj_t * parent, mcObj_t * scr)
 
 /**
  * @brief: creates a rectangle object
+ * @parent: parent object of the returned one.
+ * @scr: screen where the returned object will be displayed.
+ * @return: new rectangle object
  */ 
 mcObj_t * mcRect_create(mcObj_t *parent, mcObj_t *scr)
 {
@@ -99,6 +108,11 @@ mcObj_t * mcRect_create(mcObj_t *parent, mcObj_t *scr)
 
 /**
  * @brief: set inside of a rectangle
+ * @rec: rectangle object
+ * @shape_type: parameter which can be:
+ *      - nothing: not relevant for this function, same as border
+ *      - border: just the rectangle contour is drawn
+ *      - filled: a filled and solid rectangle is drawn
  */ 
 void mcRect_defineInside(mcObj_t * rec, mcShape_t shape_type)
 {
@@ -114,6 +128,7 @@ void mcRect_defineInside(mcObj_t * rec, mcShape_t shape_type)
  ******************************/ 
 /**
  * @brief: pixel prerender function
+ * @p: pixel object
  */ 
 static void mcPix_preRender(mcObj_t * p)
 {
@@ -129,6 +144,7 @@ static void mcPix_preRender(mcObj_t * p)
 
 /**
  * @brief: line prerender function
+ * @l: line object
  */ 
 static void mcLine_preRender(mcObj_t * l)
 {
@@ -149,11 +165,8 @@ static void mcLine_preRender(mcObj_t * l)
         l->geom.y = _MIN_(l->geom.y, l->geom.y+h);
         l->drawToBuffer_cb = mcDraw_yLine;
 
-    }else{
+    }else
         l->drawToBuffer_cb = mcDraw_xyLine;
-    }
-
-    
 
     mcObj_align_prerender(l);
     l->prerender_flg = 0;
@@ -161,6 +174,7 @@ static void mcLine_preRender(mcObj_t * l)
 
 /**
  * @brief: rectangle prerender function
+ * @r: rectangle object
  */ 
 static void mcRect_preRender(mcObj_t * r)
 {

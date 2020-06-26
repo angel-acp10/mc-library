@@ -1,10 +1,19 @@
+/************
+ * Includes
+ ************/ 
 #include "mc-text.h"
 #include "mc-draw.h"
 #include <stdio.h>
 #include <stdint.h>
 
+/**********
+ * Macros
+ **********/ 
 #define _MAX_(A,B) ( ((A)>(B))?(A):(B) )
 
+/*****************************
+ * Static function prototypes
+ *****************************/ 
 static void mcText_deleteObjData(mcObj_t * t);
 static void mcText_preRender(mcObj_t * text);
 static void mcDraw_text(mcObj_t * t);
@@ -12,8 +21,14 @@ static uint32_t get_unicode(char * ch, uint8_t * out_byte_n);
 static _Bool get_chIdx(uint32_t unicode, uint32_t * ch_idx, mcFont_t * f);
 static mcTextLine_t getLine(mcObj_t * obj, uint16_t s_idx);
 
+/******************************
+ * Public function definitions
+ ******************************/ 
 /**
  * @brief: creates a text object
+ * @parent: parent object of the returned one.
+ * @scr: screen where the returned object will be displayed.
+ * @return: new text object
  */ 
 mcObj_t * mcText_create(mcObj_t *parent, mcObj_t *scr)
 {
@@ -35,7 +50,6 @@ mcObj_t * mcText_create(mcObj_t *parent, mcObj_t *scr)
     ((mcObjData_text_t*)t->obj_data)->margin.r = 0;
     ((mcObjData_text_t*)t->obj_data)->margin.t = 0;
     ((mcObjData_text_t*)t->obj_data)->margin.b = 0;
-    //callback to draw text background
     ((mcObjData_text_t*)t->obj_data)->back_rectangle = nothing;
 
     /* init coordinates and color */
@@ -55,18 +69,35 @@ mcObj_t * mcText_create(mcObj_t *parent, mcObj_t *scr)
     return t;
 }
 
+/**
+ * @brief: set a font to the text object 
+ * @t: text object
+ * @font: font to be used by the text object
+ */
 void mcText_setFont(mcObj_t * t, mcFont_t * font)
 {
     ((mcObjData_text_t*)t->obj_data)->font = font;
     t->prerender_flg = 1;
 }
 
+/**
+ * @brief: set the text width. Actually, this is not the maximum width 
+ * of the text object, which will depend on the text to be shown.
+ * @t: text object
+ * @width: maximum width of the text object. The final object width 
+ * will be the maximum length among all text lines.
+ */
 void mcText_setWidth(mcObj_t * t, uint16_t width)
 {
     ((mcObjData_text_t*)t->obj_data)->usr_max_width = width;
     t->prerender_flg = 1;
 }
 
+/**
+ * @brief: set the string to the object
+ * @t: text object
+ * @str: string to be displayed
+ */ 
 void mcText_setStr(mcObj_t * t, char * str)
 {
     uint16_t len = 0;
@@ -92,12 +123,24 @@ void mcText_setStr(mcObj_t * t, char * str)
     t->prerender_flg = 1;
 }
 
+/**
+ * @brief: set the text alignment.
+ * @t: text object
+ * @txt_align: parameter which defines the text alignment
+ */
 void mcText_setAlign(mcObj_t * t, mcTextAlign_t txt_align)
 {
     ((mcObjData_text_t*)t->obj_data)->align = txt_align;
     t->prerender_flg = 1;
 }
 
+/**
+ * @brief: set text margins
+ * @left: left text margin in px
+ * @right: right text margin in px
+ * @top: top text margin in px
+ * @bottom: bottom text margin in px
+ */
 void mcText_setMargins(mcObj_t * t, uint8_t left, uint8_t right, uint8_t top, uint8_t bottom)
 {
     ((mcObjData_text_t*)t->obj_data)->margin.l = left;
@@ -109,7 +152,13 @@ void mcText_setMargins(mcObj_t * t, uint8_t left, uint8_t right, uint8_t top, ui
 }
 
 /**
- * @brief: set text background
+ * @brief: sets a rectangle behind the text
+ * @t: text object
+ * @shape_type: defines the rectangle appearance. 
+ * The possible parameters are listed below:
+ *      - nothing: no rectangle is drawn
+ *      - border: just the rectangle contour is drawn
+ *      - filled: a filled and solid rectangle is drawn
  */ 
 void mcText_defineBackground(mcObj_t * t, mcShape_t shape_type)
 {
@@ -118,6 +167,13 @@ void mcText_defineBackground(mcObj_t * t, mcShape_t shape_type)
     t->prerender_flg = 1;
 }
 
+/******************************
+ * Static function definitions
+ ******************************/
+/**
+ * @brief: deletes the suplementary 'obj_data' from a text object
+ * @t: text object
+ */ 
 static void mcText_deleteObjData(mcObj_t * t)
 {
     free( ((mcObjData_text_t*)t->obj_data)->str );
@@ -125,49 +181,47 @@ static void mcText_deleteObjData(mcObj_t * t)
     free( ((mcObjData_text_t*)t->obj_data) );
 }
 
+/**
+ * @brief: computes the necesary data of a text object before it is rendered 
+ * to the buffer.First, divides the introduced string in multiple lines 
+ * according to the specified object width. Then, computes the final width 
+ * and height object, the object alignment and the position of each line.
+ * @t: text object
+ */ 
 static void mcText_preRender(mcObj_t * t)
 {
-    mcTextLine_t line = {.x=0, .y=0, .start_idx=0, .end_idx=0};
+    // pointers to simplify the acces to different structures
     mcObjData_text_t* data = ((mcObjData_text_t*)t->obj_data);
     mcFont_t * f = ((mcObjData_text_t*)t->obj_data)->font;
     
-    // allocate memory for the parameters of one line
+    //get the parameters for the first text line
     data->t_line = (mcTextLine_t*) malloc(sizeof(mcTextLine_t));
     if(data->t_line == NULL)
         return;
-
-    data->N_lines = 1;
-
+    mcTextLine_t line = {.x=0, .y=0, .w=0, .start_idx=0, .end_idx=0};
     line = getLine(t, line.end_idx);
     data->t_line[0] = line;
-    if(line.end_idx == -1){
-        printf("no char available\n");
-        return;
-    }
+    data->N_lines = 1; // number of text lines
+    if(line.end_idx == -1) 
+        return; // the necessary glyphs were not found
     
+    // get the remaining lines
     while(data->str[line.end_idx+1])
     {
-        // reallocate memory for the parameters
         data->t_line = (mcTextLine_t*) realloc(data->t_line, (data->N_lines+1)*sizeof(mcTextLine_t));
-        if(data->t_line == NULL){
+        if(data->t_line == NULL)
             return;
-        }
         
         line = getLine(t, line.end_idx+1);
         data->t_line[data->N_lines] = line;
         data->N_lines++;
     }
 
-    //for(uint16_t i = 0; i<data->N_lines; i++)
-    //    printf("L=%u \t s=%u \t e=%u\n", i, data->t_line[i].start_idx, data->t_line[i].end_idx);
-    
-
     // compute maximum width and height of the entire paragraph
     uint16_t txt_width = 0;
     for(uint16_t l = 0; l<data->N_lines; l++)
         txt_width  = _MAX_( txt_width , data->t_line[l].w );
     t->geom.w = txt_width + data->margin.l + data->margin.r;
-
     t->geom.h = (f->line_height * data->N_lines) + (f->line_spacing*(data->N_lines-1));
     t->geom.h += data->margin.t + data->margin.b;
     
@@ -209,13 +263,18 @@ static void mcText_preRender(mcObj_t * t)
     t->prerender_flg = 0;
 }
 
+/**
+ * @brief: the text and the background is drawn to the buffer
+ * @t: text object
+ */ 
 static void mcDraw_text(mcObj_t * t)
 {
+    // pointers to simplify the acces to different structures
     mcObjData_text_t * data = ((mcObjData_text_t*)t->obj_data);
     mcFont_t * f = ((mcObjData_text_t*)t->obj_data)->font;
     char * str = ((mcObjData_text_t*)t->obj_data)->str;
 
-    /* background */
+    // draw the background
     switch(data->back_rectangle){
     case filled:
         t->geom.color = !t->geom.color; // use opposite color for the background
@@ -232,28 +291,31 @@ static void mcDraw_text(mcObj_t * t)
         break;
     }
 
-    /* text */
+    // draw the text
     int16_t idx;
     uint32_t uc, ch_idx;
     uint8_t n_char; 
-
     uint16_t x_char, y_char;
 
     for(uint16_t l=0; l<data->N_lines; l++)
     {
         idx = data->t_line[l].start_idx;
-
         x_char = data->t_line[l].x;
         
         while(idx <= data->t_line[l].end_idx)
         {
             // get unicode code point and its number of used bytes "n_char"
             uc = get_unicode(str+idx, &n_char);
-            //printf("uc_code_point = %u\n", uc);
 
-            // check if glyph is included in font & get ch_idx
-            if(!get_chIdx(uc, &ch_idx, f))
-                return;
+            // if the glyph is not included in the font, draw a space ' '
+            if(!get_chIdx(uc, &ch_idx, f)){ 
+                uint8_t not_used;
+                uc = get_unicode( " ", &not_used);
+
+                // if " " is not in the font, abort the execution
+                if(!get_chIdx(uc, &ch_idx, f))
+                    return;
+            }
 
             //set the appropiate vertical offset and draw the char
             y_char = data->t_line[l].y + f->ch_info[ch_idx].y_offset;
@@ -270,6 +332,9 @@ static void mcDraw_text(mcObj_t * t)
  * @brief: Given a character encoded in UTF-8, returns its unicode code point.
  * It also returns "out_byte_n" which is the number of bytes used by UTF-8 to
  * encode the given character.
+ * @ch: input char
+ * @out_byte_n: number of bytes used to encode ch in the UTF-8 encoding
+ * @return: unicode code point
  */
 static uint32_t get_unicode(char * ch, uint8_t * out_byte_n)
 {
@@ -317,7 +382,10 @@ static uint32_t get_unicode(char * ch, uint8_t * out_byte_n)
 
 /**
  * @brief: get ch_idx from a unicode code pointer in a font. 
- * Return 0 if glyph is not within the font
+ * @unicode: input unicode code point
+ * @ch_idx: ouput variable to acces the bitmap array
+ * @f: font
+ * @return: 0 if glyph is not within the font
  */ 
 static _Bool get_chIdx(uint32_t unicode, uint32_t * ch_idx, mcFont_t * f)
 {
@@ -335,18 +403,23 @@ static _Bool get_chIdx(uint32_t unicode, uint32_t * ch_idx, mcFont_t * f)
 }
 
 /**
- * @brief: find start and end indexes of str for each line
+ * @brief: given the full str of the text object and the width of each line,
+ * return the str indexes which define the first and last characters of each
+ * text line
+ * @obj: text object
+ * @s_idx: str index to start the process to get a new line
+ * @return: a struct with 'start_idx' and 'end_idx' filled.
  */ 
-static mcTextLine_t getLine(mcObj_t * obj, uint16_t s_idx)
+static mcTextLine_t getLine(mcObj_t * t, uint16_t s_idx)
 {
-    mcObjData_text_t* data = ((mcObjData_text_t*)obj->obj_data);
-    mcFont_t * f = ((mcObjData_text_t*)obj->obj_data)->font;
+    // pointers to simplify the acces to different structures
+    mcObjData_text_t* data = ((mcObjData_text_t*)t->obj_data);
+    mcFont_t * f = ((mcObjData_text_t*)t->obj_data)->font;
+
     uint16_t idx = s_idx;
-    
     // don't count initial spaces
-    while(data->str[idx] == ' '){
+    while(data->str[idx] == ' ')
         idx++;
-    }
 
     mcTextLine_t line = {.x=0, .y=0, .w=0, .start_idx = idx, .end_idx = idx};
     uint32_t uc, ch_idx;
@@ -361,10 +434,18 @@ static mcTextLine_t getLine(mcObj_t * obj, uint16_t s_idx)
             line.w = pix_len - f->fix_kern;
         }
         uc = get_unicode( (data->str)+idx, &n_ch );
-        if(!get_chIdx(uc, &ch_idx, f)){
-            line.start_idx = -1;
-            line.end_idx = -1;
-            return line;
+
+        // if the glyph is not included in the font, draw a space ' '
+        if(!get_chIdx(uc, &ch_idx, f)){ 
+            uint8_t not_used;
+            uc = get_unicode( " ", &not_used);
+
+            // if " " is not in the font, abort the execution
+            if(!get_chIdx(uc, &ch_idx, f)){
+                line.end_idx = -1;
+                line.start_idx = -1;
+                return line;
+            }
         }
 
         pix_len += f->ch_info[ch_idx].w + f->fix_kern;

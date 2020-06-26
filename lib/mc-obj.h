@@ -19,7 +19,7 @@ typedef uint8_t mcColor_t;
 
 enum{
     nothing = 0, //nothing
-    border,   //just border
+    border,    //just border
     filled       //border + inside
 };
 typedef uint8_t mcShape_t;
