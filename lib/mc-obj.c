@@ -54,6 +54,7 @@ mcObj_t* mcObj_create(mcObj_t *parent, mcObj_t *scr)
     /* initialize callback to null */
     obj->delete_obj_data_cb = NULL;
     obj->drawToBuffer_cb = NULL;
+    obj->keyInput_cb = NULL;
 
     return obj;
 }
