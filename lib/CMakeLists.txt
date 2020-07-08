@@ -7,6 +7,10 @@ add_library(lib
 	mc-obj.c
 	mc-shapes.h
 	mc-shapes.c
+	mc-input.h
+	mc-input.c
+	mc-menu.h
+	mc-menu.c
 	linked_list.h
 	linked_list.c
 	)

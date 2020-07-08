@@ -41,13 +41,13 @@ typedef struct{
     mcKey_state_t key_state;
 
     // object to be controlled
-    mcObj_t * ctrlObj;
+    //mcObj_t * ctrlObj;
 }mcInput_t;
 
 /****************************
  * Public funtion prototypes
  ****************************/ 
-void mcInput_init(mcInput_t * i, mcKey_name_t key_name, mcObj_t * ctrlObj);
+//void mcInput_init(mcInput_t * i, mcKey_name_t key_name, mcObj_t * ctrlObj);
 void mcInput_defState(mcInput_t * i, _Bool def_state);
 void mcInput_process(mcInput_t * i);
 

@@ -7,8 +7,7 @@
 #include <stdint.h>
 #include <stdlib.h>
 #include "linked_list.h"
-#include "mc-input.h"
-#include "mc-input.h"
+//#include "mc-input.h"
 
 /************
  * Typedefs
@@ -75,7 +74,7 @@ typedef struct{
 typedef void(*mcCb_drawBuffer_t)(struct mcObj* obj);
 typedef void(*mcCb_deleteObjData_t)(struct mcObj* obj);
 typedef void(*mcCb_preRender_t)(struct mcObj* obj);
-typedef void(*mcCb_keyInput_t)(struct mcObj* obj, mcKey_name_t key_name, mcKey_state_t key_state);
+//typedef void(*mcCb_keyInput_t)(struct mcObj* obj, mcKey_name_t key_name, mcKey_state_t key_state);
 
 typedef struct mcObj{
     struct mcObj * scr;
@@ -98,7 +97,7 @@ typedef struct mcObj{
     mcCb_drawBuffer_t drawToBuffer_cb;
 
     //input
-    mcCb_keyInput_t keyInput_cb;
+    //mcCb_keyInput_t keyInput_cb;
 
 }mcObj_t;
 

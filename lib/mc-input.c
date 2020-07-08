@@ -3,6 +3,7 @@
 /****************************
  * Public funtion prototypes
  ****************************/ 
+/*
 void mcInput_init(mcInput_t * i, mcKey_name_t key_name, mcObj_t * ctrlObj)
 {
     i->key_name = key_name;
@@ -13,7 +14,7 @@ void mcInput_init(mcInput_t * i, mcKey_name_t key_name, mcObj_t * ctrlObj)
     i->state = 0;
     i->flg = 0;
 }
-
+*/
 void mcInput_defState(mcInput_t * i, _Bool def_state)
 {
     i->def = def_state;
@@ -32,6 +33,6 @@ void mcInput_process(mcInput_t * i)
             i->key_state = (i->state)? PRESSED : RELEASED;
 
         /* callback to perform the changes in the object */
-        i->ctrlObj->keyInput_cb(i->ctrlObj, i->key_name, i->key_state);
+        //i->ctrlObj->keyInput_cb(i->ctrlObj, i->key_name, i->key_state);
     }
 }

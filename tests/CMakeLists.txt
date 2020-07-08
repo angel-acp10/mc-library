@@ -24,3 +24,10 @@ add_executable(test-text
 target_link_libraries(test-text ${SDL2_LIBRARIES})
 target_link_libraries(test-text lib)
 target_link_libraries(test-text fonts)
+
+# test menu
+add_executable(test-menu
+	test-menu.c) 
+target_link_libraries(test-menu ${SDL2_LIBRARIES})
+target_link_libraries(test-menu lib)
+target_link_libraries(test-menu fonts)

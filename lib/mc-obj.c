@@ -32,7 +32,9 @@ mcObj_t* mcObj_create(mcObj_t *parent, mcObj_t *scr)
         obj->parent = parent;
         obj->scr = scr;
 
-        ll_addBack(&(parent->child_list), obj); /* store obj in the parent child list */
+        if(parent != NULL )
+            ll_addBack(&(parent->child_list), obj); /* store obj in the parent child list */
+
         ll_addBack(&(scr->child_list), obj);    /* store obj in the screen child list */
     }
 
@@ -54,7 +56,7 @@ mcObj_t* mcObj_create(mcObj_t *parent, mcObj_t *scr)
     /* initialize callback to null */
     obj->delete_obj_data_cb = NULL;
     obj->drawToBuffer_cb = NULL;
-    obj->keyInput_cb = NULL;
+    //obj->keyInput_cb = NULL;
 
     return obj;
 }
@@ -94,8 +96,7 @@ void mcObj_delete(mcObj_t * obj)
 
         free(obj);
         obj = NULL;
-    }
-    else{
+    }else{
         #if _TEST_OBJ_==1
         printf("o = %p is now removed\t[case: obj->parent != obj->scr]\n", obj);
         #endif 
@@ -107,7 +108,8 @@ void mcObj_delete(mcObj_t * obj)
         ll_searchData_deleteItem(&obj->scr->child_list, obj);
 
         //remove it from the parent screen child_list
-        ll_searchData_deleteItem(&obj->parent->child_list, obj);
+        if(obj->parent != NULL )
+            ll_searchData_deleteItem(&obj->parent->child_list, obj);
 
         //if object has object data, free it
         if(obj->delete_obj_data_cb != NULL)

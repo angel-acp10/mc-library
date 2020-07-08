@@ -1,7 +1,7 @@
-#include <SDL2/SDL.h>
-#include "mc-text.h"
+#include "mc-menu.h"
 #include "mc-draw.h"
-#include "mc-shapes.h"
+#include "mc-text.h"
+#include <SDL2/SDL.h>
 #include <stdio.h>
 
 #define SCR_WIDTH 1280
@@ -63,29 +63,23 @@ int main()
     mcScr_setDisplayCb(scr, display_buffer);
     mcScr_select(scr);
 
-    mcObj_t * txt = mcText_create(scr,scr);
-    mcText_setStr(txt, "Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type");
-    mcText_setFont(txt, &helvetica_12);
-    //mcObj_setPos(txt, 0,0);
-    mcObj_align(txt, scr, MC_ALIGN_CENTER, 0, 0);
-    mcText_setWidth(txt, 500);
-    mcText_setAlign(txt, MC_TEXT_ALIGN_CENTER);
-    mcText_setMargins(txt, 100,10,10,100);
-    mcText_defineBackground(txt, border);
-    mcObj_setColor(txt,white);
-
-    mcObj_t * word = mcText_create(scr,scr);
-    mcText_setStr(word, "Hello world!");
-    mcText_setFont(word, &helvetica_12);
-    mcObj_align(word, txt, MC_ALIGN_OUT_BOTTOM_MID, 0, 0);
+    // menu
+    mcObj_t * menu = mcMenu_create(scr, scr);
+    mcObjData_menu_t * data = (mcObjData_menu_t*)menu->obj_data;
     
-    char * str = ((mcObjData_text_t*)word->obj_data)->str;
+    
 
-    printf("%s\n", str);
+    mcMenu_setItems(menu, "Item1|Item2|item3|item4");
+    //printf("%s\n", ((mcObjData_text_t*)((mcObj_t*)data->item_list.tail->data)->obj_data)->str);
 
+    mcMenu_setItems(menu, "I1|I2");
+    //printf("%s\n", string);
+    //printf("%s\n", ((mcObjData_text_t*)item->obj_data)->str );
+    //char * string = ((mcObjData_text_t*)((mcObj_t*)data->item_list.head->data)->obj_data)->str;
+    //printf("%s\n", ((mcObjData_text_t*)((mcObj_t*)data->item_list.tail->data)->obj_data)->str);
 
-    refresh_frame();
-    mcObj_delete(txt);
+    //refresh_frame();
+    //mcObj_delete(txt);
 
     // sdl close window
     while(!quit)
@@ -98,7 +92,6 @@ int main()
     SDL_DestroyWindow(window);
     SDL_Quit();
 
+
     return 0;
 }
-
-    
